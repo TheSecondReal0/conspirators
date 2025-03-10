@@ -1,4 +1,5 @@
-package com.csci448.busche.testing.components
+package com.csci448.bam.conspirators.ui.board
+
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Create
 import androidx.compose.material3.Icon

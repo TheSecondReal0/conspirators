@@ -1,17 +1,17 @@
-package com.csci448.busche.testing.DrawingViewModel
+package com.csci448.bam.conspirators.viewmodel
 
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.ui.geometry.Offset
 import androidx.lifecycle.ViewModel
-import com.csci448.busche.testing.Data.AddedComponents
-import com.csci448.busche.testing.Data.DrawnConnection
+import com.csci448.bam.conspirators.DrawingViewModel.SelectedTool
+import com.csci448.bam.conspirators.data.AddedComponents
+import com.csci448.bam.conspirators.data.DrawnConnection
 
 data class DrawingState(
     val selectedTool: SelectedTool = SelectedTool.EDIT
 )
 
-class DrawingViewModel: ViewModel() {
+class ConspiratorsViewModel: ViewModel() {
     val conspiracyEvidences = mutableStateListOf<AddedComponents>()
     val isEmptyTrashShowing = mutableStateOf(false);
     val isRecenterButtonShowing = mutableStateOf(false)

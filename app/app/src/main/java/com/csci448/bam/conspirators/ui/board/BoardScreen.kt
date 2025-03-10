@@ -1,4 +1,4 @@
-package com.csci448.busche.testing.components
+package com.csci448.bam.conspirators.ui.board
 
 import android.net.Uri
 import android.util.Log
@@ -41,16 +41,16 @@ import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.unit.dp
+import com.csci448.bam.conspirators.DrawingViewModel.SelectedTool
 import com.csci448.bam.conspirators.R
-import com.csci448.busche.testing.Data.AddedComponents
-import com.csci448.busche.testing.DrawingViewModel.DrawingViewModel
-import com.csci448.busche.testing.DrawingViewModel.SelectedTool
+import com.csci448.bam.conspirators.data.AddedComponents
+import com.csci448.bam.conspirators.viewmodel.ConspiratorsViewModel
 import kotlin.math.PI
 import kotlin.math.cos
 import kotlin.math.sin
 
 @Composable
-fun BoardScreen(viewModel: DrawingViewModel, modifier: Modifier) {
+fun BoardScreen(viewModel: ConspiratorsViewModel, modifier: Modifier) {
     Log.i("SIZE", "Screen W: ${LocalConfiguration.current.screenWidthDp} H: ${LocalConfiguration.current.screenHeightDp}")
 
     // Various Variables, some may be better off in the VM later such as selectedTool

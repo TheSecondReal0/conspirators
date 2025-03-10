@@ -10,10 +10,12 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.navigation.compose.rememberNavController
+import com.csci448.bam.conspirators.ui.navigation.ConspiratorsNavHost
 import com.csci448.bam.conspirators.ui.theme.ConspiratorsTheme
-import com.csci448.busche.testing.DrawingViewModel.DrawingViewModel
-import com.csci448.busche.testing.components.BoardScreen
+import com.csci448.bam.conspirators.viewmodel.ConspiratorsViewModel
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -22,7 +24,14 @@ class MainActivity : ComponentActivity() {
         setContent {
             ConspiratorsTheme{
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    BoardScreen(modifier = Modifier.padding(innerPadding), viewModel = DrawingViewModel())
+                    val navController = rememberNavController()
+                    val context = LocalContext.current
+                    ConspiratorsNavHost(
+                        Modifier.padding(innerPadding),
+                        navController,
+                        ConspiratorsViewModel(),
+                        context,
+                    )
                 }
             }
         }
@@ -36,7 +45,15 @@ class MainActivity : ComponentActivity() {
 fun GreetingPreview() {
     ConspiratorsTheme {
         Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-            BoardScreen(modifier = Modifier.padding(innerPadding), viewModel = DrawingViewModel())
+            val navController = rememberNavController()
+            val context = LocalContext.current
+            ConspiratorsNavHost(
+                Modifier.padding(innerPadding),
+                navController,
+                ConspiratorsViewModel(),
+                context,
+            )
+//            BoardScreen(modifier = Modifier.padding(innerPadding), viewModel = DrawingViewModel())
         }
     }
 }
