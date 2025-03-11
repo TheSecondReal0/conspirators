@@ -1,8 +1,17 @@
 package com.csci448.bam.conspirators.ui.navigation.specs
 
 import android.content.Context
+import android.util.Log
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AccountCircle
+import androidx.compose.material.icons.filled.AddCircle
+import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.Search
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.navigation.NamedNavArgument
 import androidx.navigation.NavBackStackEntry
 import androidx.navigation.NavHostController
@@ -28,15 +37,27 @@ object HomeScreenSpec: IScreenSpec {
         navBackStackEntry: NavBackStackEntry,
         context: Context
     ) {
-        HomeScreen(modifier, conspiratorsViewModel)
+        HomeScreen(modifier, conspiratorsViewModel, editClicked = {
+            Log.i(LOG_TAG, "going to edit page")
+            navController.navigate(BoardScreenSpec.route)
+        })
     }
 
     @Composable
     override fun TopAppBarActions(vm: ConspiratorsViewModel, navController: NavHostController,
-                                  navBackStackEntry: NavBackStackEntry?, context: Context
-    ) {
-//        IconButton(onClick = { navController.navigate(BoardScreenSpec.route) }) {
-//            Icon(Icons.Filled.AddCircle, contentDescription = stringResource(R.string.menu_add_character_desc))
-//        }
+                                  navBackStackEntry: NavBackStackEntry?, context: Context) {
+        Log.i("ALKJLKDSJFL", "TOP APP WAS MADE IN HOME SCREEN")
+        IconButton(onClick = { }) {
+            Icon(Icons.Filled.Search, contentDescription = "Explore")
+        }
+        IconButton(onClick = { navController.navigate(BoardScreenSpec.route) }) {
+            Icon(Icons.Filled.AddCircle, contentDescription = "New Board")
+        }
+        IconButton(onClick = { navController.navigate(HomeScreenSpec.route)}) {
+            Icon(Icons.Filled.Home, contentDescription = "Home")
+        }
+        IconButton(onClick = { }) {
+            Icon(Icons.Filled.AccountCircle, contentDescription = "Home")
+        }
     }
 }

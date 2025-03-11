@@ -31,7 +31,7 @@ data object BoardScreenSpec : IScreenSpec {
         navBackStackEntry: NavBackStackEntry,
         context: Context
     ) {
-        BoardScreen(conspiratorsViewModel, modifier)
+        BoardScreen(conspiratorsViewModel, modifier, homeClicked = {navController.navigate(HomeScreenSpec.route)})
     }
 
     @Composable
