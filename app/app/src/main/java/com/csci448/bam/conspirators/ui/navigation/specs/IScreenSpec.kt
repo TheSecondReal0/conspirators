@@ -2,6 +2,7 @@ package com.csci448.bam.conspirators.ui.navigation.specs
 
 import android.content.Context
 import android.util.Log
+import androidx.compose.foundation.layout.Arrangement
 
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.foundation.layout.Row
@@ -103,25 +104,26 @@ sealed interface IScreenSpec {
         )
 =======
          */
-        Row (Modifier.padding(5.dp).fillMaxHeight(0.1f).fillMaxWidth()) {
+        Row (Modifier.padding(5.dp).fillMaxHeight(0.1f).fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
             TopAppBarActions(vm, navController, navBackStackEntry, context)
         }
     }
 
     @Composable
     fun TopAppBarActions(vm: ConspiratorsViewModel, navController: NavHostController,
-                         navBackStackEntry: NavBackStackEntry?, context: Context) {
-        IconButton(onClick = { }) {
+                                  navBackStackEntry: NavBackStackEntry?, context: Context) {
+        Log.i("ALKJLKDSJFL", "TOP APP WAS MADE IN HOME SCREEN")
+        IconButton(onClick = {navController.navigate(ListScreenSpec.route)}) {
             Icon(Icons.Filled.Search, contentDescription = "Explore")
         }
         IconButton(onClick = { navController.navigate(BoardScreenSpec.route) }) {
             Icon(Icons.Filled.AddCircle, contentDescription = "New Board")
         }
-        IconButton(onClick = { }) {
+        IconButton(onClick = { navController.navigate(HomeScreenSpec.route)}) {
             Icon(Icons.Filled.Home, contentDescription = "Home")
         }
-        IconButton(onClick = { }) {
-            Icon(Icons.Filled.AccountCircle, contentDescription = "Profile")
+        IconButton(onClick = {navController.navigate(ProfileScreenSpec.route)}) {
+            Icon(Icons.Filled.AccountCircle, contentDescription = "Home")
         }
     }
 }

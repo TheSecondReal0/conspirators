@@ -47,7 +47,7 @@ object HomeScreenSpec: IScreenSpec {
     override fun TopAppBarActions(vm: ConspiratorsViewModel, navController: NavHostController,
                                   navBackStackEntry: NavBackStackEntry?, context: Context) {
         Log.i("ALKJLKDSJFL", "TOP APP WAS MADE IN HOME SCREEN")
-        IconButton(onClick = { }) {
+        IconButton(onClick = {navController.navigate(ListScreenSpec.route)}) {
             Icon(Icons.Filled.Search, contentDescription = "Explore")
         }
         IconButton(onClick = { navController.navigate(BoardScreenSpec.route) }) {
@@ -56,7 +56,7 @@ object HomeScreenSpec: IScreenSpec {
         IconButton(onClick = { navController.navigate(HomeScreenSpec.route)}) {
             Icon(Icons.Filled.Home, contentDescription = "Home")
         }
-        IconButton(onClick = { }) {
+        IconButton(onClick = {navController.navigate(ProfileScreenSpec.route)}) {
             Icon(Icons.Filled.AccountCircle, contentDescription = "Home")
         }
     }

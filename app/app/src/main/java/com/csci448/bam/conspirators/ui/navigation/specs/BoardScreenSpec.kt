@@ -38,11 +38,11 @@ data object BoardScreenSpec : IScreenSpec {
         BoardScreen(conspiratorsViewModel, modifier, homeClicked = {navController.navigate(HomeScreenSpec.route)})
     }
 
-    @Composable
-    override fun TopAppBarActions(vm: ConspiratorsViewModel, navController: NavHostController,
-                                  navBackStackEntry: NavBackStackEntry?, context: Context) {
-        IconButton(onClick = { navController.navigate(BoardScreenSpec.route) }) {
-            Icon(Icons.Filled.AddCircle, contentDescription = "New Board")
-        }
-    }
+//    @Composable
+//    override fun TopAppBarActions(vm: ConspiratorsViewModel, navController: NavHostController,
+//                                  navBackStackEntry: NavBackStackEntry?, context: Context) {
+//        IconButton(onClick = { navController.navigate(BoardScreenSpec.route) }) {
+//            Icon(Icons.Filled.AddCircle, contentDescription = "New Board")
+//        }
+//    }
 }

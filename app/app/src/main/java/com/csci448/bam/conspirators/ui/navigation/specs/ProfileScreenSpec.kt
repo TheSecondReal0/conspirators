@@ -3,8 +3,11 @@ package com.csci448.bam.conspirators.ui.navigation.specs
 import android.content.Context
 import android.util.Log
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.AddCircle
+import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.runtime.Composable
@@ -39,11 +42,21 @@ data object ProfileScreenSpec : IScreenSpec{
         ProfileScreen(modifier, conspiratorsViewModel)
     }
 
-    @Composable
-    override fun TopAppBarActions(vm: ConspiratorsViewModel, navController: NavHostController,
-                                  navBackStackEntry: NavBackStackEntry?, context: Context) {
-        IconButton(onClick = { navController.navigate(BoardScreenSpec.route) }) {
-            Icon(Icons.Filled.Person, contentDescription = "Profile")
-        }
-    }
+//    @Composable
+//    override fun TopAppBarActions(vm: ConspiratorsViewModel, navController: NavHostController,
+//                                  navBackStackEntry: NavBackStackEntry?, context: Context) {
+//        Log.i("ALKJLKDSJFL", "TOP APP WAS MADE IN HOME SCREEN")
+//        IconButton(onClick = {navController.navigate(ListScreenSpec.route)}) {
+//            Icon(Icons.Filled.Search, contentDescription = "Explore")
+//        }
+//        IconButton(onClick = { navController.navigate(BoardScreenSpec.route) }) {
+//            Icon(Icons.Filled.AddCircle, contentDescription = "New Board")
+//        }
+//        IconButton(onClick = { navController.navigate(HomeScreenSpec.route)}) {
+//            Icon(Icons.Filled.Home, contentDescription = "Home")
+//        }
+//        IconButton(onClick = {navController.navigate(ProfileScreenSpec.route)}) {
+//            Icon(Icons.Filled.AccountCircle, contentDescription = "Home")
+//        }
+//    }
 }
