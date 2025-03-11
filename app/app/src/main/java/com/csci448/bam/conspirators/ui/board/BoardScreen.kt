@@ -50,7 +50,7 @@ import kotlin.math.cos
 import kotlin.math.sin
 
 @Composable
-fun BoardScreen(viewModel: ConspiratorsViewModel, modifier: Modifier) {
+fun BoardScreen(viewModel: ConspiratorsViewModel, modifier: Modifier, homeClicked: () -> Unit) {
     Log.i("SIZE", "Screen W: ${LocalConfiguration.current.screenWidthDp} H: ${LocalConfiguration.current.screenHeightDp}")
 
     // Various Variables, some may be better off in the VM later such as selectedTool
@@ -372,7 +372,7 @@ fun BoardScreen(viewModel: ConspiratorsViewModel, modifier: Modifier) {
             // home button
             ToolButton(
                 onClick = {
-                    //TODO Connect to IScreen thing
+                    homeClicked()
                     Log.i("home","clicked")
 
                 },
