@@ -11,6 +11,7 @@ import com.csci448.bam.conspirators.data.User
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import java.util.UUID
 
 data class DrawingState(
     val selectedTool: SelectedTool = SelectedTool.EDIT
@@ -30,6 +31,16 @@ class ConspiratorsViewModel(val boards: List<Board>, val users: List<User>): Vie
     private val mUserListState = MutableStateFlow(users)
     val userListState: StateFlow<List<User>>
         get() = mUserListState.asStateFlow()
+
+    fun getBoardsOfUser(userUUID: UUID): List<Board> {
+        val boards: MutableList<Board> = mutableListOf()
+        for (board in boardListState.value) {
+            if (board.userUUID == userUUID) {
+                boards.add(board)
+            }
+        }
+        return boards.toList()
+    }
 
     fun rescaleAllComponents(scale: Float) {
         AddedComponents.scale.floatValue = scale
