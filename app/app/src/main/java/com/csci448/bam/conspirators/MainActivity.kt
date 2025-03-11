@@ -13,6 +13,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.navigation.compose.rememberNavController
+import com.csci448.bam.conspirators.data.BoardRepo
+import com.csci448.bam.conspirators.data.UserRepo
 import com.csci448.bam.conspirators.ui.navigation.ConspiratorsNavHost
 import com.csci448.bam.conspirators.ui.theme.ConspiratorsTheme
 import com.csci448.bam.conspirators.viewmodel.ConspiratorsViewModel
@@ -29,7 +31,7 @@ class MainActivity : ComponentActivity() {
                     ConspiratorsNavHost(
                         Modifier.padding(innerPadding),
                         navController,
-                        ConspiratorsViewModel(),
+                        ConspiratorsViewModel(BoardRepo.boards, UserRepo.users),
                         context,
                     )
                 }
@@ -50,7 +52,7 @@ fun GreetingPreview() {
             ConspiratorsNavHost(
                 Modifier.padding(innerPadding),
                 navController,
-                ConspiratorsViewModel(),
+                ConspiratorsViewModel(BoardRepo.boards, UserRepo.users),
                 context,
             )
 //            BoardScreen(modifier = Modifier.padding(innerPadding), viewModel = DrawingViewModel())

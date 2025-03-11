@@ -5,18 +5,31 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import com.csci448.bam.conspirators.DrawingViewModel.SelectedTool
 import com.csci448.bam.conspirators.data.AddedComponents
+import com.csci448.bam.conspirators.data.Board
 import com.csci448.bam.conspirators.data.DrawnConnection
+import com.csci448.bam.conspirators.data.User
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 
 data class DrawingState(
     val selectedTool: SelectedTool = SelectedTool.EDIT
 )
 
-class ConspiratorsViewModel: ViewModel() {
+class ConspiratorsViewModel(val boards: List<Board>, val users: List<User>): ViewModel() {
     val conspiracyEvidences = mutableStateListOf<AddedComponents>()
     val isEmptyTrashShowing = mutableStateOf(false);
     val isRecenterButtonShowing = mutableStateOf(false)
     private val mConspiracyConnections = mutableListOf<DrawnConnection>()
     val conspiracyConnections = mConspiracyConnections
+
+    private val mBoardListState = MutableStateFlow(boards)
+    val boardListState: StateFlow<List<Board>>
+        get() = mBoardListState.asStateFlow()
+
+    private val mUserListState = MutableStateFlow(users)
+    val userListState: StateFlow<List<User>>
+        get() = mUserListState.asStateFlow()
 
     fun rescaleAllComponents(scale: Float) {
         AddedComponents.scale.floatValue = scale
