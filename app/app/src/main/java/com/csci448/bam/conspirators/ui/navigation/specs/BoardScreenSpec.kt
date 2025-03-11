@@ -1,6 +1,10 @@
 package com.csci448.bam.conspirators.ui.navigation.specs
 
 import android.content.Context
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AddCircle
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -36,5 +40,9 @@ data object BoardScreenSpec : IScreenSpec {
 
     @Composable
     override fun TopAppBarActions(vm: ConspiratorsViewModel, navController: NavHostController,
-                                  navBackStackEntry: NavBackStackEntry?, context: Context) {}
+                                  navBackStackEntry: NavBackStackEntry?, context: Context) {
+        IconButton(onClick = { navController.navigate(BoardScreenSpec.route) }) {
+            Icon(Icons.Filled.AddCircle, contentDescription = "New Board")
+        }
+    }
 }

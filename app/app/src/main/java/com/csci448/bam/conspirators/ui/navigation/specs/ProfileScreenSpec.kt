@@ -4,8 +4,7 @@ import android.content.Context
 import android.util.Log
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AddCircle
-import androidx.compose.material.icons.filled.Home
-import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.runtime.Composable
@@ -17,14 +16,15 @@ import androidx.navigation.NavBackStackEntry
 import androidx.navigation.NavHostController
 import com.csci448.bam.conspirators.R
 import com.csci448.bam.conspirators.ui.list.ListScreen
+import com.csci448.bam.conspirators.ui.profile.ProfileScreen
 import com.csci448.bam.conspirators.viewmodel.ConspiratorsViewModel
 
-data object ListScreenSpec : IScreenSpec{
+data object ProfileScreenSpec : IScreenSpec{
     private const val LOG_TAG = "448.ListScreenSpec"
 
     override val title = R.string.app_name
 
-    override val route = "list"
+    override val route = "profile"
     override val arguments: List<NamedNavArgument> = emptyList()
     override fun buildRoute(vararg args: String?) = route
 
@@ -36,14 +36,14 @@ data object ListScreenSpec : IScreenSpec{
         navBackStackEntry: NavBackStackEntry,
         context: Context
     ) {
-        ListScreen(modifier, conspiratorsViewModel)
+        ProfileScreen(modifier, conspiratorsViewModel)
     }
 
     @Composable
     override fun TopAppBarActions(vm: ConspiratorsViewModel, navController: NavHostController,
                                   navBackStackEntry: NavBackStackEntry?, context: Context) {
         IconButton(onClick = { navController.navigate(BoardScreenSpec.route) }) {
-            Icon(Icons.Filled.Search, contentDescription = "Explore")
+            Icon(Icons.Filled.Person, contentDescription = "Profile")
         }
     }
 }

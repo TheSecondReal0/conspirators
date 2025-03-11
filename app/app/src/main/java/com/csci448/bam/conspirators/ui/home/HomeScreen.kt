@@ -20,7 +20,7 @@ fun HomeScreen(modifier: Modifier, conspiratorsViewModel: ConspiratorsViewModel)
     LazyVerticalGrid (modifier = Modifier.fillMaxSize(), columns = GridCells.Fixed(2))
     {
         items(conspiratorsViewModel.boards) { item ->
-            BoardCard(title = item.name, image = R.drawable.sample_image, onClick = {})
+            BoardCard(title = item.name, image = R.drawable.sample_image, onClick = {}, userName = "sample user")
         }
     }
 }

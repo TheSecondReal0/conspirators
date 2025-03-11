@@ -21,6 +21,7 @@ class ConspiratorsViewModel(val boards: List<Board>, val users: List<User>): Vie
     val conspiracyEvidences = mutableStateListOf<AddedComponents>()
     val isEmptyTrashShowing = mutableStateOf(false);
     val isRecenterButtonShowing = mutableStateOf(false)
+    val searchExpanded = mutableStateOf(false)
     private val mConspiracyConnections = mutableListOf<DrawnConnection>()
     val conspiracyConnections = mConspiracyConnections
 
@@ -31,7 +32,7 @@ class ConspiratorsViewModel(val boards: List<Board>, val users: List<User>): Vie
     private val mUserListState = MutableStateFlow(users)
     val userListState: StateFlow<List<User>>
         get() = mUserListState.asStateFlow()
-
+    val currentUser = mutableStateOf(users[0])
     fun getBoardsOfUser(userUUID: UUID): List<Board> {
         val boards: MutableList<Board> = mutableListOf()
         for (board in boardListState.value) {
@@ -40,6 +41,16 @@ class ConspiratorsViewModel(val boards: List<Board>, val users: List<User>): Vie
             }
         }
         return boards.toList()
+    }
+
+    fun getUserNameByUUID(userUUID: UUID): String {
+        var username: String = "Unknown"
+        for (user in userListState.value) {
+            if (user.userId == userUUID) {
+                username = user.userName
+            }
+        }
+        return username
     }
 
     fun rescaleAllComponents(scale: Float) {
