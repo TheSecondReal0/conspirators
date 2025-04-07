@@ -1,27 +1,53 @@
 package com.csci448.bam.conspirators.ui.board
 
+import android.content.Context
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
+import android.graphics.ImageDecoder
+import android.media.Image
 import android.net.Uri
+import android.os.Build
 import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.gestures.detectTransformGestures
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Create
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Done
 import androidx.compose.material.icons.filled.Face
 import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.List
+import androidx.compose.material.icons.filled.Search
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CardElevation
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.IconButtonColors
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
@@ -36,15 +62,22 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.colorResource
+import androidx.compose.ui.text.drawText
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.csci448.bam.conspirators.DrawingViewModel.SelectedTool
 import com.csci448.bam.conspirators.R
 import com.csci448.bam.conspirators.data.AddedComponents
+import com.csci448.bam.conspirators.data.AddedComponents.Companion.scale
+import com.csci448.bam.conspirators.data.AddedComponents.Companion.screenSize
 import com.csci448.bam.conspirators.viewmodel.ConspiratorsViewModel
+import java.util.UUID
 import kotlin.math.PI
 import kotlin.math.cos
 import kotlin.math.sin
@@ -52,10 +85,9 @@ import kotlin.math.sin
 @Composable
 fun BoardScreen(viewModel: ConspiratorsViewModel, modifier: Modifier, homeClicked: () -> Unit) {
     Log.i("SIZE", "Screen W: ${LocalConfiguration.current.screenWidthDp} H: ${LocalConfiguration.current.screenHeightDp}")
-
-    // Various Variables, some may be better off in the VM later such as selectedTool
-    AddedComponents.screenSize = Pair(LocalConfiguration.current.screenWidthDp, LocalConfiguration.current.screenHeightDp)
-    var selectedTool by remember { mutableStateOf(SelectedTool.EDIT)}
+    // Various Variables, some may be better off in the VM later
+    screenSize = Pair(LocalConfiguration.current.screenWidthDp, LocalConfiguration.current.screenHeightDp)
+    var selectedTool by remember { viewModel.selectedTool}
     var imageUri by remember { mutableStateOf<Uri?>(null) }
     // global transforming values for the board components
     var offset by remember { mutableStateOf(Offset.Zero) }
@@ -81,7 +113,6 @@ fun BoardScreen(viewModel: ConspiratorsViewModel, modifier: Modifier, homeClicke
             }
         }
     )
-
     /*
         Here is where the Board actually starts getting drawn. We have a canvas to draw on that can detect touch using 3 pointerInputs.
         PointerInputs denote the type of touch we're looking for.
@@ -100,71 +131,61 @@ fun BoardScreen(viewModel: ConspiratorsViewModel, modifier: Modifier, homeClicke
         Canvas(modifier = Modifier
             .fillMaxSize()
             .background(Color.DarkGray)
-
-            // DETECTS ZOOM GESTURE
+            // DETECTS ZOOM & PAN GESTURE
             .pointerInput(Unit) {
-                detectTransformGestures { centroid, pan, zoom, gestureRotate ->
-                    val oldScale = zoom
+                detectTransformGestures (panZoomLock = true) { centroid, pan, zoom, gestureRotate ->
+                    viewModel.isZoomPercentShowing.value = true
+                    var lockToZoomOnly = false
+                    if (scale*zoom != scale){
+                        lockToZoomOnly = true
+                    }
                     scale *= zoom
                     viewModel.rescaleAllComponents(scale)
                     Log.i("Multi Drag", "multi drag start at ${centroid.x}, ${centroid.y}")
-
                     //offset = (offset + centroid / oldScale).rotateBy(gestureRotate) - (centroid / scale + pan / oldScale)
-                }
-
-            }
-                // DETECTS PAN GESTURE FOR BOARD AND COMPONENTS
-            .pointerInput(Unit) {
-                detectDragGestures(
-                    // check pointer location at start
-                    onDragStart = { pointerStartOffset -> pointerOffset = pointerStartOffset
-                        Log.i("Drag", "      drag start at ${pointerStartOffset.x}, ${pointerStartOffset.y}")
+                        pointerOffset = centroid
+                        Log.i("Drag", "      drag start at ${pointerOffset.x}, ${pointerOffset.y}")
                         // Finding target image to move if applicable
                         var removeIdx: Int? = null
-                        viewModel.conspiracyEvidences.forEachIndexed {
-                                index, item ->
-                            if (pointerOffset.x >=                           (item.offset.value.x + offset.x)*scale &&
-                                pointerOffset.y >=                           (item.offset.value.y + offset.y)*scale &&
-                                pointerOffset.x <= item.getBitmap().width  + (item.offset.value.x + offset.x)*scale &&
-                                pointerOffset.y <= item.getBitmap().height + (item.offset.value.y + offset.y)*scale
-                            )
-                            {
+                    if (!lockToZoomOnly) {
+                        viewModel.conspiracyEvidences.forEachIndexed { index, item ->
+                            if (pointerOffset.x >= (item.offset.value.x + offset.x) * scale &&
+                                pointerOffset.y >= (item.offset.value.y + offset.y) * scale &&
+                                pointerOffset.x <= item.getBitmap().width + (item.offset.value.x + offset.x) * scale &&
+                                pointerOffset.y <= item.getBitmap().height + (item.offset.value.y + offset.y) * scale
+                            ) {
                                 removeIdx = index
                                 Log.i("listlen", "$removeIdx")
                             }
                         }
+                    }
                         if (removeIdx != null) {
                             viewModel.conspiracyEvidences.add(viewModel.conspiracyEvidences[removeIdx!!])
                             viewModel.conspiracyEvidences.removeAt(removeIdx!!)
                             itemToDrag = viewModel.conspiracyEvidences.lastIndex
                         }
-                    },
-                    onDragEnd = {
-                        itemToDrag = null
-                    }
-                )
-                { change, dragAmount ->
-                    change.consume()
-                    //check if we're already dragging something
-                    //check if we're dragging images or the board
-                    if (selectedTool == SelectedTool.EDIT || selectedTool == SelectedTool.TRASH || selectedTool == SelectedTool.CONNECT) {
-                        // Moving Targeted Image
-                        if (itemToDrag != null) {
-                            val imageOffset  = viewModel.conspiracyEvidences[itemToDrag!!].offset
-                                viewModel.conspiracyEvidences[itemToDrag!!].offset.value = Offset(imageOffset.value.x + dragAmount.x, imageOffset.value.y + dragAmount.y)
+
+                        if (selectedTool == SelectedTool.EDIT || selectedTool == SelectedTool.TRASH || selectedTool == SelectedTool.CONNECT) {
+                            // Moving Targeted Image
+                            if (itemToDrag != null) {
+                                val imageOffset  = viewModel.conspiracyEvidences[itemToDrag!!].offset
+                                viewModel.conspiracyEvidences[itemToDrag!!].offset.value = Offset(imageOffset.value.x + pan.x, imageOffset.value.y + pan.y)
                                 Log.i("Drag", "Image offset changing")
+                                itemToDrag = null;
+                            }
+                            else {
+                                offset+=pan*scale
+                            }
                         }
                         else {
-                            offset+=dragAmount*scale
+                            offset += pan*scale
                         }
-                    }
-                    else {
-                        offset += dragAmount*scale
-                    }
+
                 }
             }
                 //DETECTS TAPS FOR COMPONENT SELECTION
             .pointerInput(Unit) {
+                viewModel.isZoomPercentShowing.value = false
                 detectTapGestures(onTap = { pointerStartOffset -> pointerOffset = pointerStartOffset
                     Log.i("tapping", "detected tap")
                     var targetIdx: Int? = null
@@ -179,6 +200,10 @@ fun BoardScreen(viewModel: ConspiratorsViewModel, modifier: Modifier, homeClicke
                             if (selectedTool == SelectedTool.TRASH || selectedTool == SelectedTool.CONNECT) {
                                 targetIdx = index
                                 Log.i("tapping", "item selected = ${viewModel.conspiracyEvidences.last().currentlySelected.value}")
+                            }
+
+                            if (selectedTool == SelectedTool.EDIT) {
+                                selectedTool = SelectedTool.EDIT_COMPONENT
                             }
                         }
                     }
@@ -218,8 +243,8 @@ fun BoardScreen(viewModel: ConspiratorsViewModel, modifier: Modifier, homeClicke
                 if (calculatedOffset.x < screenSize.x && calculatedOffset.y < screenSize.y &&
                     calculatedOffset.x + item.getBitmap().width > 0 &&
                     calculatedOffset.y + item.getBitmap().height > 0) {
-                    Log.i("compare", "Comp x ${calculatedOffset.x.toString()}, Board x: ${screenSize.x.toString()}")
-                    Log.i("compare", "Comp y ${calculatedOffset.y.toString()}, Board y: ${screenSize.y.toString()}")
+                    //Log.i("compare", "Comp x ${calculatedOffset.x.toString()}, Board x: ${screenSize.x.toString()}")
+                    //Log.i("compare", "Comp y ${calculatedOffset.y.toString()}, Board y: ${screenSize.y.toString()}")
                     shouldAddRecenterButton = false
                     item.getBitmap().prepareToDraw()
                     if(item.currentlySelected.value) {
@@ -247,9 +272,10 @@ fun BoardScreen(viewModel: ConspiratorsViewModel, modifier: Modifier, homeClicke
             else {
                 viewModel.isRecenterButtonShowing.value = false
             }
+            //drawText()
         }
 
-        // Optional Buttons on Top of Screen that only appear on certain modes being used
+        // Optional Buttons on Top Middle of Screen that only appear on certain modes being used
         // trash disposal button
         if (viewModel.isEmptyTrashShowing.value && selectedTool == SelectedTool.TRASH) {
             SimpleTextButton(
@@ -274,28 +300,37 @@ fun BoardScreen(viewModel: ConspiratorsViewModel, modifier: Modifier, homeClicke
                 label = "Delete selected items"
             )
         }
-        // recenter button
-        if (viewModel.isRecenterButtonShowing.value)  {
-            SimpleTextButton(
-                onClick = {
-                    val iterator = viewModel.conspiracyEvidences.iterator()
+        // Top right corner buttons/notifs that only occasionally show
+        Column(modifier = Modifier.align(Alignment.TopEnd)) {
+            // recenter button
+            if (viewModel.isRecenterButtonShowing.value)  {
+                SimpleTextButton(
+                    onClick = {
+                        val iterator = viewModel.conspiracyEvidences.iterator()
 
-                    val componentOffsetList: MutableList<Offset> = mutableListOf()
-                    while (iterator.hasNext()) {
-                        val element = iterator.next()
-                        componentOffsetList.add(element.offset.value)
-                    }
-                    componentOffsetList.sortBy { offset.x }
-                    val newOffsetX = -componentOffsetList[componentOffsetList.size/2].x + screenSize.x/2
-                    componentOffsetList.sortBy { offset.y }
-                    val newOffsetY = -componentOffsetList[componentOffsetList.size/2].y + screenSize.y/2
-                    offset = Offset(newOffsetX, newOffsetY)
-                    viewModel.isRecenterButtonShowing.value = false
-                }, modifier = modifier.padding(end = 10.dp).clip(shape = RoundedCornerShape(5.dp)).align(Alignment.TopEnd).background(Color.Gray),
-                label = "Recenter"
-            )
+                        val componentOffsetList: MutableList<Offset> = mutableListOf()
+                        while (iterator.hasNext()) {
+                            val element = iterator.next()
+                            componentOffsetList.add(element.offset.value)
+                        }
+                        componentOffsetList.sortBy { offset.x }
+                        val newOffsetX = -componentOffsetList[componentOffsetList.size/2].x + screenSize.x/2
+                        //componentOffsetList.sortBy { offset.y }
+                        val newOffsetY = -componentOffsetList[componentOffsetList.size/2].y + screenSize.y/2
+                        offset = Offset(newOffsetX, newOffsetY)
+                        viewModel.isRecenterButtonShowing.value = false
+                    }, modifier = modifier.padding(end = 10.dp).clip(shape = RoundedCornerShape(5.dp)).background(Color.Gray),
+                    label = "Recenter"
+                )
+            }
+            // show zoom percent
+            if (viewModel.isZoomPercentShowing.value)  {
+                Text(
+                    modifier = modifier.padding(end = 10.dp).clip(shape = RoundedCornerShape(5.dp)).background(Color.Gray),
+                    text = "${scale*100}%"
+                )
+            }
         }
-
         // Column Carrying all editing tools
         Column (modifier = modifier
             .fillMaxWidth(.1F)
@@ -349,6 +384,15 @@ fun BoardScreen(viewModel: ConspiratorsViewModel, modifier: Modifier, homeClicke
                 useIcon2 = (selectedTool == SelectedTool.VIEW),
                 iconDesc = "Click"
             )
+            // List View Button
+            ToolButton(
+                onClick = {
+                    Log.i("List","clicked")
+                    viewModel.showListComponentTree.value = !viewModel.showListComponentTree.value
+                },
+                icon = Icons.AutoMirrored.Filled.List,
+                iconDesc = "Click"
+            )
             // delete mode button
             ToolButton(
                 onClick = {
@@ -374,15 +418,101 @@ fun BoardScreen(viewModel: ConspiratorsViewModel, modifier: Modifier, homeClicke
                 onClick = {
                     homeClicked()
                     Log.i("home","clicked")
-
                 },
                 icon = Icons.Filled.Home,
                 iconDesc = "Click"
             )
         }
+        // Edit Component Card
+        if (selectedTool == SelectedTool.EDIT_COMPONENT) {
+            ComponentEditCard(
+                modifier = Modifier,
+                component = viewModel.conspiracyEvidences[0],
+                context = currentContext,
+                closeClicked = {
+                    selectedTool = SelectedTool.EDIT
+                }
+            )
+        }
+
+        val animatedAlpha: Float by animateFloatAsState(if
+                (selectedTool == SelectedTool.EDIT ||
+                selectedTool == SelectedTool.VIEW ||
+                selectedTool == SelectedTool.CONNECT)
+            1f else 0f, label = "alpha",
+            animationSpec = tween(durationMillis = 500, easing = FastOutSlowInEasing))
+        Text(
+            text = getCurrentActionLabel(selectedTool),
+            modifier = Modifier
+                .align(Alignment.TopStart)
+                .graphicsLayer { alpha = animatedAlpha }
+                .padding(5.dp)
+                .background(Color.White)
+
+
+        )
         //Image( painter = rememberAsyncImagePainter(imageUri), contentDescription = "image" , modifier = Modifier.fillMaxSize(.05f).align(Alignment.BottomCenter))
     }
+}
 
+private fun getCurrentActionLabel(selectedTool: SelectedTool): String {
+    return when (selectedTool) {
+        SelectedTool.EDIT -> "Editing"
+        SelectedTool.VIEW -> "Viewing"
+        SelectedTool.CONNECT -> "Connecting Evidence"
+        else -> ""
+    }
+}
+
+@Composable
+fun ComponentEditCard(modifier: Modifier, component: AddedComponents, context: Context, closeClicked: () -> Unit) {
+    Column(
+        modifier = modifier.fillMaxHeight(.65f).fillMaxWidth(0.8f).clip(RoundedCornerShape(20.dp)).background(Color.Cyan), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.SpaceEvenly
+    ) {
+            val inputStream = context.contentResolver.openInputStream(component.uri)
+            val bitmap = BitmapFactory.decodeStream(inputStream)
+            inputStream?.close()
+            var desiredHeight = bitmap.height.toFloat()
+            var desiredWidth = bitmap.width.toFloat()
+
+            if (desiredHeight > screenSize.second) {
+                val scaler: Float = desiredHeight/(screenSize.second)
+                desiredHeight /= scaler
+                desiredWidth /= scaler
+            }
+            if (desiredWidth > screenSize.first) {
+                val scaler = desiredWidth/(screenSize.first)
+                desiredHeight /= scaler
+                desiredWidth /= scaler
+            }
+            desiredWidth = desiredWidth* scale.floatValue
+            desiredHeight = desiredHeight* scale.floatValue
+            val bitmap2 = Bitmap.createScaledBitmap(bitmap, desiredWidth.toInt(), desiredHeight.toInt(), false)
+            val imageBitmap = bitmap2.asImageBitmap()
+        Row(horizontalArrangement = Arrangement.SpaceAround) {
+
+            TextField(
+                value = component.title.value,
+                onValueChange = { newText -> component.title.value = newText },
+                label = { Text("Title") },
+                singleLine = true,
+                modifier = Modifier.fillMaxWidth(.6f)
+            )
+            IconButton(
+                onClick = closeClicked, modifier.size(40.dp),
+                colors = IconButtonColors(
+                    containerColor = Color(0,0,0,100),
+                    contentColor = Color.White,
+                    disabledContainerColor = Color.DarkGray,
+                    disabledContentColor = Color.DarkGray
+                )
+            ) {
+                Icon(Icons.Filled.Close, "close")
+            }
+        }
+
+        Image(imageBitmap, component.title.value)
+    }
 }
 
 fun Offset.rotateBy(angle: Float): Offset {

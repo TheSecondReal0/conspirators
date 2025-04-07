@@ -7,6 +7,7 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navigation
+import com.csci448.bam.conspirators.MainActivity
 import com.csci448.bam.conspirators.ui.navigation.specs.IScreenSpec
 import com.csci448.bam.conspirators.viewmodel.ConspiratorsViewModel
 

@@ -15,7 +15,7 @@ import androidx.compose.ui.graphics.OffsetEffect
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.platform.LocalConfiguration
 
-data class AddedComponents( val uri: Uri, private val context: Context, val offset: MutableState<Offset> = mutableStateOf(Offset.Zero)) {
+data class AddedComponents( val uri: Uri, private val context: Context, val offset: MutableState<Offset> = mutableStateOf(Offset.Zero), val title: MutableState<String> = mutableStateOf("")) {
     private lateinit var imageBitmap: ImageBitmap
     val currentlySelected = mutableStateOf(false)
 

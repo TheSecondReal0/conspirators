@@ -1,5 +1,6 @@
 package com.csci448.bam.conspirators.viewmodel
 
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
@@ -8,6 +9,7 @@ import com.csci448.bam.conspirators.data.AddedComponents
 import com.csci448.bam.conspirators.data.Board
 import com.csci448.bam.conspirators.data.DrawnConnection
 import com.csci448.bam.conspirators.data.User
+import com.google.firebase.auth.FirebaseUser
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -18,17 +20,29 @@ data class DrawingState(
 )
 
 class ConspiratorsViewModel(val boards: List<Board>, val users: List<User>): ViewModel() {
+    // current user
+    private val mThisUser: MutableState<FirebaseUser?> = mutableStateOf(null)
+    val thisUser get() = mThisUser.value
+    fun setUser(fbUser: FirebaseUser?) {
+        mThisUser.value = fbUser
+    }
+    // all related to board drawing
     val conspiracyEvidences = mutableStateListOf<AddedComponents>()
     val isEmptyTrashShowing = mutableStateOf(false);
     val isRecenterButtonShowing = mutableStateOf(false)
+    val isZoomPercentShowing = mutableStateOf(false)
     val searchExpanded = mutableStateOf(false)
+    val showListComponentTree = mutableStateOf(false)
+    val selectedTool = mutableStateOf(SelectedTool.EDIT)
     private val mConspiracyConnections = mutableListOf<DrawnConnection>()
     val conspiracyConnections = mConspiracyConnections
 
+    // related to board list
     private val mBoardListState = MutableStateFlow(boards)
     val boardListState: StateFlow<List<Board>>
         get() = mBoardListState.asStateFlow()
 
+    // related to user lists
     private val mUserListState = MutableStateFlow(users)
     val userListState: StateFlow<List<User>>
         get() = mUserListState.asStateFlow()
@@ -53,6 +67,7 @@ class ConspiratorsViewModel(val boards: List<Board>, val users: List<User>): Vie
         return username
     }
 
+    // board editing functions
     fun rescaleAllComponents(scale: Float) {
         AddedComponents.scale.floatValue = scale
         conspiracyEvidences.forEach { item ->
@@ -75,4 +90,6 @@ class ConspiratorsViewModel(val boards: List<Board>, val users: List<User>): Vie
             mConspiracyConnections.add(DrawnConnection(evidence1, evidence2))
         }
     }
+
+
 }

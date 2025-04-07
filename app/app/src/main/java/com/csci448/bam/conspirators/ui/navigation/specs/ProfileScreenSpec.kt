@@ -1,5 +1,7 @@
 package com.csci448.bam.conspirators.ui.navigation.specs
 
+import android.app.Activity
+import android.app.Activity.RESULT_OK
 import android.content.Context
 import android.util.Log
 import androidx.compose.material.icons.Icons
@@ -12,15 +14,24 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.navigation.NamedNavArgument
 import androidx.navigation.NavBackStackEntry
 import androidx.navigation.NavHostController
+import com.csci448.bam.conspirators.MainActivity
 import com.csci448.bam.conspirators.R
 import com.csci448.bam.conspirators.ui.list.ListScreen
 import com.csci448.bam.conspirators.ui.profile.ProfileScreen
 import com.csci448.bam.conspirators.viewmodel.ConspiratorsViewModel
+import com.firebase.ui.auth.AuthUI
+import com.firebase.ui.auth.FirebaseAuthUIActivityResultContract
+import com.firebase.ui.auth.data.model.FirebaseAuthUIAuthenticationResult
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.FirebaseUser
 
 data object ProfileScreenSpec : IScreenSpec{
     private const val LOG_TAG = "448.ListScreenSpec"
@@ -30,7 +41,10 @@ data object ProfileScreenSpec : IScreenSpec{
     override val route = "profile"
     override val arguments: List<NamedNavArgument> = emptyList()
     override fun buildRoute(vararg args: String?) = route
-
+    // Choose authentication providers
+    val providers = arrayListOf(
+        AuthUI.IdpConfig.EmailBuilder().build()
+    )
     @Composable
     override fun Content(
         modifier: Modifier,
@@ -39,7 +53,39 @@ data object ProfileScreenSpec : IScreenSpec{
         navBackStackEntry: NavBackStackEntry,
         context: Context
     ) {
-        ProfileScreen(modifier, conspiratorsViewModel)
+        ProfileScreen(
+            modifier, conspiratorsViewModel,
+            signInClicked = {
+                val signInIntent = AuthUI.getInstance()
+                    .createSignInIntentBuilder()
+                    .setAvailableProviders(providers)
+                    .build()
+
+                val signInLauncher = MainActivity().registerForActivityResult(
+                    FirebaseAuthUIActivityResultContract(),
+                ) { res ->
+                    this.onSignInResult(res, viewModel = conspiratorsViewModel)
+                }
+
+                signInLauncher.launch(signInIntent)
+            },
+        )
+    }
+    var user: FirebaseUser? = null
+
+    private fun onSignInResult(result: FirebaseAuthUIAuthenticationResult, viewModel: ConspiratorsViewModel) {
+        val response = result.idpResponse
+        if (result.resultCode == RESULT_OK) {
+            // Successfully signed in
+            user = FirebaseAuth.getInstance().currentUser
+            user?.let { viewModel.setUser(it) }
+            // ...
+        } else {
+            // Sign in failed. If response is null the user canceled the
+            // sign-in flow using the back button. Otherwise check
+            // response.getError().getErrorCode() and handle the error.
+            // ...
+        }
     }
 
 //    @Composable

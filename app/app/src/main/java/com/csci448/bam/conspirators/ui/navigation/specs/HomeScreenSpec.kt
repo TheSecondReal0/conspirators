@@ -15,6 +15,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.navigation.NamedNavArgument
 import androidx.navigation.NavBackStackEntry
 import androidx.navigation.NavHostController
+import com.csci448.bam.conspirators.MainActivity
 import com.csci448.bam.conspirators.R
 import com.csci448.bam.conspirators.ui.home.HomeScreen
 import com.csci448.bam.conspirators.ui.list.ListScreen

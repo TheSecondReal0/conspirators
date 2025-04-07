@@ -5,6 +5,7 @@ plugins {
     alias(libs.plugins.kotlin.compose)
 }
 
+
 android {
     namespace = "com.csci448.bam.conspirators"
     compileSdk = 35
@@ -56,6 +57,9 @@ dependencies {
     implementation(libs.kotlin.reflect)
     implementation(libs.coil.compose)
     testImplementation(libs.junit)
+    implementation(libs.firebase.ui.auth)
+    implementation(platform(libs.firebase.bom))
+    implementation(libs.firebase.analytics)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
     androidTestImplementation(platform(libs.androidx.compose.bom))
