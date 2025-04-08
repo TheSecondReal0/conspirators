@@ -1,5 +1,6 @@
 package com.csci448.bam.conspirators.viewmodel
 
+
 import android.content.Context
 import android.icu.text.SimpleDateFormat
 import android.net.Uri
@@ -7,6 +8,7 @@ import android.util.Log
 import androidx.camera.core.ImageCapture
 import androidx.camera.core.ImageCaptureException
 import androidx.camera.lifecycle.ProcessCameraProvider
+
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
@@ -19,6 +21,8 @@ import com.csci448.bam.conspirators.data.Board
 import com.csci448.bam.conspirators.data.DrawnConnection
 import com.csci448.bam.conspirators.data.User
 import com.google.firebase.auth.FirebaseUser
+import com.google.firebase.firestore.ktx.firestore
+import com.google.firebase.ktx.Firebase
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -34,7 +38,25 @@ data class DrawingState(
 )
 
 class ConspiratorsViewModel(val boards: List<Board>, val users: List<User>): ViewModel() {
-    // current user
+    val database = Firebase.firestore
+
+    /*
+    fun testDB() {
+        database.collection("test").add(hashMapOf(
+            "firstType" to "Beep",
+            "secondType" to "Beepus"
+        ))
+            .addOnSuccessListener { documentReference ->
+                Log.i("jlkjl", "DocumentSnapshot added with ID: ${documentReference.id}")
+            }
+            .addOnFailureListener { e ->
+                Log.w("jlkjl", "Error adding document", e)
+            }
+    }
+
+     */
+
+    // current User
     private val mThisUser: MutableState<FirebaseUser?> = mutableStateOf(null)
     val thisUser get() = mThisUser.value
     fun setUser(fbUser: FirebaseUser?) {

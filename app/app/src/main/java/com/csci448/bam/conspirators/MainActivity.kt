@@ -31,12 +31,71 @@ import android.annotation.SuppressLint
 import android.net.Uri
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
+import com.firebase.ui.auth.AuthUI
+import com.firebase.ui.auth.FirebaseAuthUIActivityResultContract
+import com.firebase.ui.auth.data.model.FirebaseAuthUIAuthenticationResult
 import java.io.File
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 
 class MainActivity : ComponentActivity() {
 
+    private val signInLauncher = registerForActivityResult(
+        FirebaseAuthUIActivityResultContract(),
+    ) { res ->
+        this.onSignInResult(res)
+    }
+
+    private fun createSignInIntent() {
+        // [START auth_fui_create_intent]
+        // Choose authentication providers
+        val providers = arrayListOf(
+            AuthUI.IdpConfig.EmailBuilder().build()
+        )
+
+        // Create and launch sign-in intent
+        val signInIntent = AuthUI.getInstance()
+            .createSignInIntentBuilder()
+            .setAvailableProviders(providers)
+            .build()
+        signInLauncher.launch(signInIntent)
+        // [END auth_fui_create_intent]
+    }
+
+    // [START auth_fui_result]
+    private fun onSignInResult(result: FirebaseAuthUIAuthenticationResult) {
+        val response = result.idpResponse
+        if (result.resultCode == RESULT_OK) {
+            // Successfully signed in
+            val user = FirebaseAuth.getInstance().currentUser
+            conspiratorsViewModel.setUser(user)
+            // ...
+        } else {
+            
+        }
+    }
+
+    private fun signOut() {
+        // [START auth_fui_signout]
+        AuthUI.getInstance()
+            .signOut(this)
+            .addOnCompleteListener {
+                // ...
+            }
+        // [END auth_fui_signout]
+    }
+
+    private fun delete() {
+        // [START auth_fui_delete]
+        AuthUI.getInstance()
+            .delete(this)
+            .addOnCompleteListener {
+                // ...
+            }
+        // [END auth_fui_delete]
+    }
+
+    
     companion object {
         val LOG_TAG: String = "Main"
     }
@@ -46,10 +105,7 @@ class MainActivity : ComponentActivity() {
 
     val conspiratorsViewModel = ConspiratorsViewModel(BoardRepo.boards, UserRepo.users)
 
-
     // Create and launch sign-in intent
-
-
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -59,7 +115,8 @@ class MainActivity : ComponentActivity() {
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
                     val navController = rememberNavController()
                     val context = LocalContext.current
-
+                    createSignInIntent()
+                    //conspiratorsViewModel.testDB()
                     Box(contentAlignment = Alignment.BottomCenter) {
                         ConspiratorsNavHost(
                             Modifier.padding(innerPadding),
