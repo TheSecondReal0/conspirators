@@ -1,22 +1,29 @@
 package com.csci448.bam.conspirators.ui.navigation
 
 import android.content.Context
+import android.net.Uri
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.MutableState
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navigation
-import com.csci448.bam.conspirators.MainActivity
 import com.csci448.bam.conspirators.ui.navigation.specs.IScreenSpec
 import com.csci448.bam.conspirators.viewmodel.ConspiratorsViewModel
+import java.io.File
+import java.util.concurrent.ExecutorService
 
 @Composable
 fun ConspiratorsNavHost(
     modifier: Modifier = Modifier,
     navController: NavHostController,
     conspiratorsViewModel: ConspiratorsViewModel,
-    context: Context
+    context: Context,
+    shouldShowCamera: MutableState<Boolean>,
+    outputDirectory: File,
+    cameraExecutor: ExecutorService,
+    handleImageCapture: (Uri) -> Unit
 ) {
     NavHost(
         modifier = modifier,
@@ -38,7 +45,12 @@ fun ConspiratorsNavHost(
                             navController = navController,
                             navBackStackEntry = navBackStackEntry,
                             conspiratorsViewModel = conspiratorsViewModel,
-                            context = context
+                            context = context,
+                            shouldShowCamera = shouldShowCamera,
+                            outputDirectory = outputDirectory,
+                            cameraExecutor = cameraExecutor,
+                            handleImageCapture = handleImageCapture
+
                         )
                     }
                 }

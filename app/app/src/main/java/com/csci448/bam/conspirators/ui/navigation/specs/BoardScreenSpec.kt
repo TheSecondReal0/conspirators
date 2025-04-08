@@ -1,21 +1,18 @@
 package com.csci448.bam.conspirators.ui.navigation.specs
 
 import android.content.Context
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.AddCircle
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
+import android.net.Uri
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.MutableState
 import androidx.compose.ui.Modifier
 import androidx.navigation.NamedNavArgument
 import androidx.navigation.NavBackStackEntry
 import androidx.navigation.NavHostController
-import com.csci448.bam.conspirators.MainActivity
 import com.csci448.bam.conspirators.R
 import com.csci448.bam.conspirators.ui.board.BoardScreen
 import com.csci448.bam.conspirators.viewmodel.ConspiratorsViewModel
+import java.io.File
+import java.util.concurrent.ExecutorService
 
 //import com.csci448.bam.conspirators.components.BoardScreen
 
@@ -34,9 +31,13 @@ data object BoardScreenSpec : IScreenSpec {
         conspiratorsViewModel: ConspiratorsViewModel,
         navController: NavHostController,
         navBackStackEntry: NavBackStackEntry,
-        context: Context
+        context: Context,
+        shouldShowCamera: MutableState<Boolean>,
+        outputDirectory: File,
+        cameraExecutor: ExecutorService,
+        handleImageCapture: (Uri) -> Unit
     ) {
-        BoardScreen(conspiratorsViewModel, modifier, homeClicked = {navController.navigate(HomeScreenSpec.route)})
+        BoardScreen(conspiratorsViewModel, modifier, homeClicked = {navController.navigate(HomeScreenSpec.route)}, shouldShowCamera, outputDirectory, cameraExecutor, handleImageCapture)
     }
 
 //    @Composable

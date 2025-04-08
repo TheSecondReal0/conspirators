@@ -16,6 +16,10 @@ import androidx.compose.material3.SearchBarDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
@@ -27,6 +31,7 @@ import com.csci448.bam.conspirators.viewmodel.ConspiratorsViewModel
 @Composable
 fun ListScreen(modifier: Modifier, conspiratorsViewModel: ConspiratorsViewModel) {
     Column(modifier = modifier) {
+        var search by remember { mutableStateOf("") }
         SearchBar(
             modifier = Modifier.align(Alignment.CenterHorizontally),
             inputField = {
@@ -37,8 +42,8 @@ fun ListScreen(modifier: Modifier, conspiratorsViewModel: ConspiratorsViewModel)
                     placeholder = { Text("Search for a board or user") },
                     leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
                     trailingIcon = { Icon(Icons.Default.MoreVert, contentDescription = null) },
-                    query = "Nothing",
-                    onQueryChange = {},
+                    query = search,
+                    onQueryChange = {q: String -> search = q;},
                     modifier = Modifier.padding(2.dp),
                     enabled = true,
                     colors = TextFieldDefaults.colors(),

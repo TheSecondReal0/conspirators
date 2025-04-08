@@ -44,6 +44,14 @@ android {
 dependencies {
     implementation(libs.androidx.room.ktx)
     implementation(libs.androidx.room.runtime)
+    // CameraX core library
+    implementation(libs.androidx.camera.core.v130)
+    // Camera2 implementation for CameraX
+    implementation(libs.androidx.camera.camera2.v130)
+    // CameraX lifecycle integration
+    implementation(libs.androidx.camera.lifecycle.v130)
+    // CameraX view integration (for Camera Preview)
+    implementation(libs.androidx.camera.view.v130)
     ksp(libs.androidx.room.compiler)
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)

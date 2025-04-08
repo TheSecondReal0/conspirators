@@ -1,8 +1,17 @@
 package com.csci448.bam.conspirators.viewmodel
 
+import android.content.Context
+import android.icu.text.SimpleDateFormat
+import android.net.Uri
+import android.util.Log
+import androidx.camera.core.ImageCapture
+import androidx.camera.core.ImageCaptureException
+import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
+import androidx.core.content.ContextCompat
+
 import androidx.lifecycle.ViewModel
 import com.csci448.bam.conspirators.DrawingViewModel.SelectedTool
 import com.csci448.bam.conspirators.data.AddedComponents
@@ -13,7 +22,12 @@ import com.google.firebase.auth.FirebaseUser
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import java.io.File
+import java.util.Locale
 import java.util.UUID
+import java.util.concurrent.Executor
+import kotlin.coroutines.resume
+import kotlin.coroutines.suspendCoroutine
 
 data class DrawingState(
     val selectedTool: SelectedTool = SelectedTool.EDIT
@@ -89,6 +103,13 @@ class ConspiratorsViewModel(val boards: List<Board>, val users: List<User>): Vie
         if (addComp == true) {
             mConspiracyConnections.add(DrawnConnection(evidence1, evidence2))
         }
+    }
+
+
+    val showCameraView = false
+
+    companion object {
+        var showCameraView: Boolean = false
     }
 
 

@@ -1,12 +1,12 @@
 package com.csci448.bam.conspirators
 
-import android.app.Activity.RESULT_OK
+import android.content.pm.PackageManager
 import android.os.Bundle
 import android.util.Log
-import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -16,6 +16,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
 import androidx.navigation.compose.rememberNavController
 import com.csci448.bam.conspirators.data.BoardRepo
 import com.csci448.bam.conspirators.data.UserRepo
@@ -23,14 +25,15 @@ import com.csci448.bam.conspirators.ui.navigation.ConspiratorsNavHost
 import com.csci448.bam.conspirators.ui.navigation.ConspiratorsTopBar
 import com.csci448.bam.conspirators.ui.theme.ConspiratorsTheme
 import com.csci448.bam.conspirators.viewmodel.ConspiratorsViewModel
-import com.firebase.ui.auth.AuthUI
-import com.firebase.ui.auth.FirebaseAuthUIActivityResultContract
-import com.firebase.ui.auth.data.model.FirebaseAuthUIAuthenticationResult
-import com.google.firebase.Firebase
-import com.google.firebase.FirebaseApp
 import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.auth.FirebaseUser
-import com.google.firebase.auth.auth
+import android.Manifest
+import android.annotation.SuppressLint
+import android.net.Uri
+import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.mutableStateOf
+import java.io.File
+import java.util.concurrent.ExecutorService
+import java.util.concurrent.Executors
 
 class MainActivity : ComponentActivity() {
 
@@ -63,12 +66,20 @@ class MainActivity : ComponentActivity() {
                             navController,
                             conspiratorsViewModel,
                             context,
-                        )
+                            shouldShowCamera,
+                            outputDirectory,
+                            cameraExecutor,
+
+                            ) { uri: Uri -> handleImageCapture(uri) }
                         ConspiratorsTopBar(navController, conspiratorsViewModel, context)
                     }
                 }
             }
         }
+        requestCameraPermission()
+
+        outputDirectory = getOutputDirectory()
+        cameraExecutor = Executors.newSingleThreadExecutor()
     }
 
 
@@ -89,25 +100,85 @@ class MainActivity : ComponentActivity() {
 
          */
     }
+
+    private val requestPermissionLauncher = registerForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { isGranted ->
+        if (isGranted) {
+            Log.i("Camera", "Permission granted")
+        } else {
+            Log.i("Camera", "Permission denied")
+        }
+    }
+
+    private fun requestCameraPermission() {
+        when {
+            ContextCompat.checkSelfPermission(
+                this,
+                Manifest.permission.CAMERA
+            ) == PackageManager.PERMISSION_GRANTED -> {
+                Log.i("Camera", "Permission previously granted")
+            }
+
+            ActivityCompat.shouldShowRequestPermissionRationale(
+                this,
+                Manifest.permission.CAMERA
+            ) -> Log.i("Camera", "Show camera permissions dialog")
+
+            else -> requestPermissionLauncher.launch(Manifest.permission.CAMERA)
+        }
+    }
+
+    private lateinit var outputDirectory: File
+    private lateinit var cameraExecutor: ExecutorService
+    private var shouldShowCamera: MutableState<Boolean> = mutableStateOf(false)
+    private lateinit var photoUri: Uri
+    private var shouldShowPhoto: MutableState<Boolean> = mutableStateOf(false)
+
+    fun handleImageCapture(uri: Uri) {
+        Log.i("kilo", "Image captured: $uri")
+        shouldShowCamera.value = false
+        photoUri = uri
+        shouldShowPhoto.value = true
+    }
+
+    private fun getOutputDirectory(): File {
+        val mediaDir = externalMediaDirs.firstOrNull()?.let {
+            File(it, resources.getString(R.string.app_name)).apply { mkdirs() }
+        }
+
+        return if (mediaDir != null && mediaDir.exists()) mediaDir else filesDir
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        cameraExecutor.shutdown()
+    }
 }
 
 
 
 
+@SuppressLint("UnrememberedMutableState")
 @Preview(showBackground = true)
 @Composable
 fun GreetingPreview() {
-    ConspiratorsTheme {
-        Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-            val navController = rememberNavController()
-            val context = LocalContext.current
-            ConspiratorsNavHost(
-                Modifier.padding(innerPadding),
-                navController,
-                ConspiratorsViewModel(BoardRepo.boards, UserRepo.users),
-                context,
-            )
-//            BoardScreen(modifier = Modifier.padding(innerPadding), viewModel = DrawingViewModel())
-        }
-    }
+    val shouldShowCamera: MutableState<Boolean> = mutableStateOf(false)
+//    ConspiratorsTheme {
+//        Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
+//            val navController = rememberNavController()
+//            val context = LocalContext.current
+//            ConspiratorsNavHost(
+//                Modifier.padding(innerPadding),
+//                navController,
+//                ConspiratorsViewModel(BoardRepo.boards, UserRepo.users),
+//                context,
+//                shouldShowCamera,
+//                outputDirectory,
+//                cameraExecutor,
+//                handleImageCapture,
+//            )
+////            BoardScreen(modifier = Modifier.padding(innerPadding), viewModel = DrawingViewModel())
+//        }
+//    }
 }

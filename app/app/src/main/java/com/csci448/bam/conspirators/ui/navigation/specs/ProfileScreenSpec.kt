@@ -1,30 +1,16 @@
 package com.csci448.bam.conspirators.ui.navigation.specs
 
-import android.app.Activity
 import android.app.Activity.RESULT_OK
 import android.content.Context
-import android.util.Log
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.AccountCircle
-import androidx.compose.material.icons.filled.AddCircle
-import androidx.compose.material.icons.filled.Home
-import androidx.compose.material.icons.filled.Person
-import androidx.compose.material.icons.filled.Search
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
+import android.net.Uri
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.MutableState
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.stringResource
 import androidx.navigation.NamedNavArgument
 import androidx.navigation.NavBackStackEntry
 import androidx.navigation.NavHostController
 import com.csci448.bam.conspirators.MainActivity
 import com.csci448.bam.conspirators.R
-import com.csci448.bam.conspirators.ui.list.ListScreen
 import com.csci448.bam.conspirators.ui.profile.ProfileScreen
 import com.csci448.bam.conspirators.viewmodel.ConspiratorsViewModel
 import com.firebase.ui.auth.AuthUI
@@ -32,6 +18,8 @@ import com.firebase.ui.auth.FirebaseAuthUIActivityResultContract
 import com.firebase.ui.auth.data.model.FirebaseAuthUIAuthenticationResult
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
+import java.io.File
+import java.util.concurrent.ExecutorService
 
 data object ProfileScreenSpec : IScreenSpec{
     private const val LOG_TAG = "448.ListScreenSpec"
@@ -51,7 +39,11 @@ data object ProfileScreenSpec : IScreenSpec{
         conspiratorsViewModel: ConspiratorsViewModel,
         navController: NavHostController,
         navBackStackEntry: NavBackStackEntry,
-        context: Context
+        context: Context,
+        shouldShowCamera: MutableState<Boolean>,
+        outputDirectory: File,
+        cameraExecutor: ExecutorService,
+        handleImageCapture: (Uri) -> Unit
     ) {
         ProfileScreen(
             modifier, conspiratorsViewModel,
