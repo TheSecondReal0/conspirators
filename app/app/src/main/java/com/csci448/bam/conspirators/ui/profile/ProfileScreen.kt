@@ -38,7 +38,8 @@ fun ProfileScreen(modifier: Modifier, conspiratorsViewModel: ConspiratorsViewMod
         Button(
             onClick = {
                 signInClicked()
-            }
+            },
+            modifier = Modifier.align(Alignment.End)
         ) {
 
         }
@@ -58,7 +59,7 @@ fun ProfileScreen(modifier: Modifier, conspiratorsViewModel: ConspiratorsViewMod
             Column(modifier = Modifier
                 .padding(10.dp)
                 .align(Alignment.CenterVertically)) {
-                Text(text = conspiratorsViewModel.currentUser.value.userName, fontSize = 30.sp, fontWeight = FontWeight.Bold)
+                conspiratorsViewModel.thisUser?.displayName?.let { Text(text = it, fontSize = 30.sp, fontWeight = FontWeight.Bold) }
             }
         }
 

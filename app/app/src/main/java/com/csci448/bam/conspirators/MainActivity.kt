@@ -34,6 +34,62 @@ import com.google.firebase.auth.auth
 
 class MainActivity : ComponentActivity() {
 
+    private val signInLauncher = registerForActivityResult(
+        FirebaseAuthUIActivityResultContract(),
+    ) { res ->
+        this.onSignInResult(res)
+    }
+
+    private fun createSignInIntent() {
+        // [START auth_fui_create_intent]
+        // Choose authentication providers
+        val providers = arrayListOf(
+            AuthUI.IdpConfig.EmailBuilder().build()
+        )
+
+        // Create and launch sign-in intent
+        val signInIntent = AuthUI.getInstance()
+            .createSignInIntentBuilder()
+            .setAvailableProviders(providers)
+            .build()
+        signInLauncher.launch(signInIntent)
+        // [END auth_fui_create_intent]
+    }
+
+    // [START auth_fui_result]
+    private fun onSignInResult(result: FirebaseAuthUIAuthenticationResult) {
+        val response = result.idpResponse
+        if (result.resultCode == RESULT_OK) {
+            // Successfully signed in
+            val user = FirebaseAuth.getInstance().currentUser
+            conspiratorsViewModel.setUser(user)
+            // ...
+        } else {
+            //Toast.makeText(LocalContext.current, "Sign in failed", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    private fun signOut() {
+        // [START auth_fui_signout]
+        AuthUI.getInstance()
+            .signOut(this)
+            .addOnCompleteListener {
+                // ...
+            }
+        // [END auth_fui_signout]
+    }
+
+    private fun delete() {
+        // [START auth_fui_delete]
+        AuthUI.getInstance()
+            .delete(this)
+            .addOnCompleteListener {
+                // ...
+            }
+        // [END auth_fui_delete]
+    }
+
+    
     companion object {
         val LOG_TAG: String = "Main"
     }
@@ -43,10 +99,7 @@ class MainActivity : ComponentActivity() {
 
     val conspiratorsViewModel = ConspiratorsViewModel(BoardRepo.boards, UserRepo.users)
 
-
     // Create and launch sign-in intent
-
-
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -56,7 +109,8 @@ class MainActivity : ComponentActivity() {
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
                     val navController = rememberNavController()
                     val context = LocalContext.current
-
+                    createSignInIntent()
+                    //conspiratorsViewModel.testDB()
                     Box(contentAlignment = Alignment.BottomCenter) {
                         ConspiratorsNavHost(
                             Modifier.padding(innerPadding),
@@ -90,9 +144,6 @@ class MainActivity : ComponentActivity() {
          */
     }
 }
-
-
-
 
 @Preview(showBackground = true)
 @Composable

@@ -41,10 +41,7 @@ data object ProfileScreenSpec : IScreenSpec{
     override val route = "profile"
     override val arguments: List<NamedNavArgument> = emptyList()
     override fun buildRoute(vararg args: String?) = route
-    // Choose authentication providers
-    val providers = arrayListOf(
-        AuthUI.IdpConfig.EmailBuilder().build()
-    )
+
     @Composable
     override fun Content(
         modifier: Modifier,
@@ -56,37 +53,11 @@ data object ProfileScreenSpec : IScreenSpec{
         ProfileScreen(
             modifier, conspiratorsViewModel,
             signInClicked = {
-                val signInIntent = AuthUI.getInstance()
-                    .createSignInIntentBuilder()
-                    .setAvailableProviders(providers)
-                    .build()
 
-                val signInLauncher = MainActivity().registerForActivityResult(
-                    FirebaseAuthUIActivityResultContract(),
-                ) { res ->
-                    this.onSignInResult(res, viewModel = conspiratorsViewModel)
-                }
-
-                signInLauncher.launch(signInIntent)
             },
         )
     }
-    var user: FirebaseUser? = null
 
-    private fun onSignInResult(result: FirebaseAuthUIAuthenticationResult, viewModel: ConspiratorsViewModel) {
-        val response = result.idpResponse
-        if (result.resultCode == RESULT_OK) {
-            // Successfully signed in
-            user = FirebaseAuth.getInstance().currentUser
-            user?.let { viewModel.setUser(it) }
-            // ...
-        } else {
-            // Sign in failed. If response is null the user canceled the
-            // sign-in flow using the back button. Otherwise check
-            // response.getError().getErrorCode() and handle the error.
-            // ...
-        }
-    }
 
 //    @Composable
 //    override fun TopAppBarActions(vm: ConspiratorsViewModel, navController: NavHostController,
