@@ -1,5 +1,6 @@
 package com.csci448.bam.conspirators.ui.list
 
+import android.widget.Toast
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -18,6 +19,7 @@ import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import com.csci448.bam.conspirators.R
 import com.csci448.bam.conspirators.ui.sharedComponents.BoardCard
@@ -27,6 +29,7 @@ import com.csci448.bam.conspirators.viewmodel.ConspiratorsViewModel
 @Composable
 fun ListScreen(modifier: Modifier, conspiratorsViewModel: ConspiratorsViewModel) {
     Column(modifier = modifier) {
+        val localContext = LocalContext.current
         SearchBar(
             modifier = Modifier.align(Alignment.CenterHorizontally),
             inputField = {
@@ -38,7 +41,7 @@ fun ListScreen(modifier: Modifier, conspiratorsViewModel: ConspiratorsViewModel)
                     leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
                     trailingIcon = { Icon(Icons.Default.MoreVert, contentDescription = null) },
                     query = "Nothing",
-                    onQueryChange = {},
+                    onQueryChange = {Toast.makeText(localContext, "Would display search results for boards and users", Toast.LENGTH_SHORT).show()},
                     modifier = Modifier.padding(2.dp),
                     enabled = true,
                     colors = TextFieldDefaults.colors(),
@@ -54,10 +57,11 @@ fun ListScreen(modifier: Modifier, conspiratorsViewModel: ConspiratorsViewModel)
         ) {
             Text(text = "YOU SEARCHED!!! YAYYYYY")
         }
+        val context = LocalContext.current
         LazyVerticalGrid (modifier = Modifier.fillMaxSize().padding(horizontal = 5.dp, vertical = 3.dp), columns = GridCells.Fixed(2))
         {
             items(conspiratorsViewModel.boards) { item ->
-                BoardCard(title = item.name, image = R.drawable.sample_image, onClick = {}, userName = conspiratorsViewModel.getUserNameByUUID(item.userUUID))
+                BoardCard(title = item.name, image = R.drawable.sample_image, onClick = { Toast.makeText(context, "Would take you to view this board", Toast.LENGTH_SHORT).show()}, userName = conspiratorsViewModel.getUserNameByUUID(item.userUUID))
             }
         }
     }
