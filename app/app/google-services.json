@@ -1,13 +1,13 @@
 {
   "project_info": {
-    "project_number": "513563994796",
-    "project_id": "conspirators-2d80f",
-    "storage_bucket": "conspirators-2d80f.firebasestorage.app"
+    "project_number": "241495136901",
+    "project_id": "conspirators-4f3f2",
+    "storage_bucket": "conspirators-4f3f2.firebasestorage.app"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:513563994796:android:9e175b0250cf432cdf8d09",
+        "mobilesdk_app_id": "1:241495136901:android:56deb469fa81925fbea7ec",
         "android_client_info": {
           "package_name": "com.csci448.bam.conspirators"
         }
@@ -15,7 +15,7 @@
       "oauth_client": [],
       "api_key": [
         {
-          "current_key": "AIzaSyDF_s-y5Hy-FPbQMB20IUM1DTbLI_lf-YQ"
+          "current_key": "AIzaSyD7QLtj7-Td3J5Qs1kQ7dRSgbI2Um1FSng"
         }
       ],
       "services": {
