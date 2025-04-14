@@ -12,6 +12,7 @@ import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -38,6 +39,10 @@ import java.util.UUID
 fun HomeScreen(modifier: Modifier, conspiratorsViewModel: ConspiratorsViewModel, editClicked: () -> Unit) {
     var displayExpandedView by remember { mutableStateOf(false) }
     var boardToView: Board? by remember { mutableStateOf(null) }
+    DisposableEffect(conspiratorsViewModel) {
+        conspiratorsViewModel.addListener()
+        onDispose { conspiratorsViewModel.removeListener() }
+    }
 
     Column(modifier = modifier.fillMaxSize()) {
         Text(
@@ -54,13 +59,13 @@ fun HomeScreen(modifier: Modifier, conspiratorsViewModel: ConspiratorsViewModel,
             modifier = Modifier.weight(1f),
             columns = GridCells.Fixed(2)
         ) {
-            items(conspiratorsViewModel.boards) { item ->
+            items(conspiratorsViewModel.mBoards.values.toList(), key = { it.id }) { item ->
                 BoardCard(
                     title = item.name,
                     image = R.drawable.sample_image,
                     onClick = {
                         displayExpandedView = true
-                        boardToView = item
+                        boardToView = conspiratorsViewModel.boards[0]
                     },
                     userName = "sample user"
                 )

@@ -11,21 +11,26 @@ import androidx.camera.lifecycle.ProcessCameraProvider
 
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.core.content.ContextCompat
 
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import com.csci448.bam.conspirators.DrawingViewModel.SelectedTool
 import com.csci448.bam.conspirators.data.AddedComponents
 import com.csci448.bam.conspirators.data.Board
 import com.csci448.bam.conspirators.data.DrawnConnection
 import com.csci448.bam.conspirators.data.User
+import com.csci448.bam.conspirators.data.firestore.StorageService
+import com.csci448.bam.conspirators.data.firestore.StorageServiceImpl
 import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.launch
 import java.io.File
 import java.util.Locale
 import java.util.UUID
@@ -39,6 +44,9 @@ data class DrawingState(
 
 class ConspiratorsViewModel(val boards: List<Board>, val users: List<User>): ViewModel() {
     val database = Firebase.firestore
+    val storageService: StorageService = StorageServiceImpl()
+
+    val mBoards = mutableStateMapOf<String, com.csci448.bam.conspirators.data.firestore.Board>()
 
     /*
     fun testDB() {
@@ -134,5 +142,20 @@ class ConspiratorsViewModel(val boards: List<Board>, val users: List<User>): Vie
         var showCameraView: Boolean = false
     }
 
+    fun addListener() {
+        viewModelScope.launch() {
+            if (thisUser != null) storageService.addListener(
+                thisUser!!.uid,
+                {wasDocumentDeleted: Boolean, board: com.csci448.bam.conspirators.data.firestore.Board -> onDocumentEvent(wasDocumentDeleted, board)},
+                {})
+        }
+    }
 
+    fun onDocumentEvent(wasDocumentDeleted: Boolean, board: com.csci448.bam.conspirators.data.firestore.Board) {
+        if (wasDocumentDeleted) mBoards.remove(board.id) else mBoards[board.id] = board
+    }
+
+    fun removeListener() {
+        viewModelScope.launch() { storageService.removeListener() }
+    }
 }
