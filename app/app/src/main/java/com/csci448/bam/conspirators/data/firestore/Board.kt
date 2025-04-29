@@ -4,6 +4,7 @@ data class Board(
     val id: String = "",
     val userId: String = "",
     val name: String = "",
-    val connections: List<Connection> = listOf(),
-    val images: List<Image> = listOf(),
+    // keys and values here are IDs used in images map
+    val connections: Map<String, String> = mapOf(),
+    val images: Map<String, Image> = mapOf(),
     )

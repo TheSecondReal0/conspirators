@@ -71,8 +71,12 @@ class StorageServiceImpl : StorageService {
     }
 
     private fun docToBoard(doc: DocumentSnapshot): Board {
-        var obj: Board = Board(id = doc.id)
-        obj = obj.copy(name = doc.data?.get("name").toString())
+        var obj: Board? = doc.toObject(Board::class.java)
+        obj = obj!!.copy(
+            id = doc.id
+        )
+//        var obj: Board = Board(id = doc.id)
+//        obj = obj.copy(name = doc.data?.get("name").toString())
         return obj
     }
 }
