@@ -58,16 +58,45 @@ class StorageServiceImpl : StorageService {
         }
     }
 
-    override fun saveBoard(board: Board, onResult: (Throwable?) -> Unit) {
-        TODO("Not yet implemented")
+    override fun saveBoard(board: Board, onSuccess: (Board) -> Unit, onError: (Throwable) -> Unit) {
+        Firebase.firestore.collection("boards")
+            .add(board)
+            .addOnSuccessListener { documentRef ->
+                // need to pull generated ID back out
+                val generatedId = documentRef.id
+                Log.d(LOG_TAG, "Saved board with id: $generatedId")
+
+                val newBoard: Board = board.copy(id = generatedId)
+                onSuccess(newBoard)
+            }
+            .addOnFailureListener { e ->
+                Log.e(LOG_TAG, "Error saving board", e)
+                onError(e)
+            }
     }
 
     override fun updateBoard(board: Board, onResult: (Throwable?) -> Unit) {
-        TODO("Not yet implemented")
+        Firebase.firestore.collection("boards")
+            .document(board.id!!)
+            .set(board)
+            .addOnSuccessListener {
+                onResult(null)
+            }
+            .addOnFailureListener {
+                onResult(it)
+            }
     }
 
     override fun deleteBoard(boardId: String, onResult: (Throwable?) -> Unit) {
-        TODO("Not yet implemented")
+        Firebase.firestore.collection("boards")
+            .document(boardId)
+            .delete()
+            .addOnSuccessListener {
+                onResult(null)
+            }
+            .addOnFailureListener {
+                onResult(it)
+            }
     }
 
     private fun docToBoard(doc: DocumentSnapshot): Board {
@@ -75,8 +104,6 @@ class StorageServiceImpl : StorageService {
         obj = obj!!.copy(
             id = doc.id
         )
-//        var obj: Board = Board(id = doc.id)
-//        obj = obj.copy(name = doc.data?.get("name").toString())
         return obj
     }
 }

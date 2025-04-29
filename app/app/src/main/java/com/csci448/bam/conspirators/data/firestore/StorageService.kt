@@ -9,7 +9,7 @@ interface StorageService {
 
     fun removeListenerForBoardsWithUserId()
     fun getBoard(boardId: String, onError: (Throwable) -> Unit, onSuccess: (Board) -> Unit)
-    fun saveBoard(board: Board, onResult: (Throwable?) -> Unit)
+    fun saveBoard(board: Board, onSuccess: (Board) -> Unit, onError: (Throwable) -> Unit)
     fun updateBoard(board: Board, onResult: (Throwable?) -> Unit)
     fun deleteBoard(boardId: String, onResult: (Throwable?) -> Unit)
 }

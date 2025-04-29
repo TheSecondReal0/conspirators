@@ -1,7 +1,7 @@
 package com.csci448.bam.conspirators.data.firestore
 
 data class Board(
-    val id: String = "",
+    val id: String?,
     val userId: String = "",
     val name: String = "",
     // keys and values here are IDs used in images map
