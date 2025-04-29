@@ -1,25 +1,30 @@
 package com.csci448.bam.conspirators.data.firestore
 
+import android.util.Log
 import com.google.firebase.firestore.ListenerRegistration
-import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.firestore.DocumentChange
+import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.QueryDocumentSnapshot
 import com.google.firebase.firestore.ktx.firestore
-import com.google.firebase.firestore.toObject
 import com.google.firebase.ktx.Firebase
 
 class StorageServiceImpl : StorageService {
-    var listenerRegistration: ListenerRegistration? = null
+    companion object {
+        const val LOG_TAG: String = "StorageServiceImpl"
+    }
 
-    override fun addListener(
+    var listenerRegistrationForBoardsWithUserId: ListenerRegistration? = null
+
+    override fun addListenerForBoardsWithUserId(
         userId: String,
         onDocumentEvent: (Boolean, Board) -> Unit,
         onError: (Throwable) -> Unit
     ) {
         val query = Firebase.firestore.collection("boards").whereEqualTo("userId", userId)
 
-        listenerRegistration = query.addSnapshotListener { value, error ->
+        listenerRegistrationForBoardsWithUserId = query.addSnapshotListener { value, error ->
             if (error != null) {
+                Log.e(LOG_TAG, "listenerForBoardsWithUserId failed with error $error")
                 onError(error)
                 return@addSnapshotListener
             }
@@ -33,8 +38,8 @@ class StorageServiceImpl : StorageService {
         }
     }
 
-    override fun removeListener() {
-        listenerRegistration?.remove()
+    override fun removeListenerForBoardsWithUserId() {
+        listenerRegistrationForBoardsWithUserId?.remove()
     }
 
     override fun getBoard(
@@ -42,7 +47,15 @@ class StorageServiceImpl : StorageService {
         onError: (Throwable) -> Unit,
         onSuccess: (Board) -> Unit
     ) {
-        TODO("Not yet implemented")
+        val docRef = Firebase.firestore.collection("boards").document(boardId)
+        docRef.get().addOnSuccessListener {
+            Log.d(LOG_TAG, "Successfully retrieved board $boardId: ${it.data}")
+            val board: Board = docToBoard(it)
+            onSuccess(board)
+        } .addOnFailureListener {
+            Log.e(LOG_TAG, "getBoard failed with error $it")
+            onError(it)
+        }
     }
 
     override fun saveBoard(board: Board, onResult: (Throwable?) -> Unit) {
@@ -57,9 +70,9 @@ class StorageServiceImpl : StorageService {
         TODO("Not yet implemented")
     }
 
-    private fun docToBoard(doc: QueryDocumentSnapshot): Board {
+    private fun docToBoard(doc: DocumentSnapshot): Board {
         var obj: Board = Board(id = doc.id)
-        obj = obj.copy(name = doc.data.get("name").toString())
+        obj = obj.copy(name = doc.data?.get("name").toString())
         return obj
     }
 }

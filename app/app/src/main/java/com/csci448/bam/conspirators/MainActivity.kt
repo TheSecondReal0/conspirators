@@ -57,6 +57,9 @@ class MainActivity : ComponentActivity() {
         val signInIntent = AuthUI.getInstance()
             .createSignInIntentBuilder()
             .setAvailableProviders(providers)
+            // disabling credential manager cause not working?
+            // this makes it so you need to sign in every time you launch the app :(
+            .setCredentialManagerEnabled(false)
             .build()
         signInLauncher.launch(signInIntent)
         // [END auth_fui_create_intent]

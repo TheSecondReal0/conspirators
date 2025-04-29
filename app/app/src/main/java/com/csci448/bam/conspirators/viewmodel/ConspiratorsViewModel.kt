@@ -1,19 +1,10 @@
 package com.csci448.bam.conspirators.viewmodel
 
 
-import android.content.Context
-import android.icu.text.SimpleDateFormat
-import android.net.Uri
-import android.util.Log
-import androidx.camera.core.ImageCapture
-import androidx.camera.core.ImageCaptureException
-import androidx.camera.lifecycle.ProcessCameraProvider
-
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
-import androidx.core.content.ContextCompat
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -31,12 +22,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
-import java.io.File
-import java.util.Locale
 import java.util.UUID
-import java.util.concurrent.Executor
-import kotlin.coroutines.resume
-import kotlin.coroutines.suspendCoroutine
 
 data class DrawingState(
     val selectedTool: SelectedTool = SelectedTool.EDIT
@@ -70,6 +56,17 @@ class ConspiratorsViewModel(val boards: List<Board>, val users: List<User>): Vie
     fun setUser(fbUser: FirebaseUser?) {
         mThisUser.value = fbUser
     }
+
+    private val mBoard: MutableState<com.csci448.bam.conspirators.data.firestore.Board?> = mutableStateOf(null)
+    val board get() = mBoard.value
+    fun loadBoard(id: String) {
+        storageService.getBoard(
+            boardId = id,
+            onSuccess = { mBoard.value = it },
+            onError = {}
+        )
+    }
+
     // all related to board drawing
     val conspiracyEvidences = mutableStateListOf<AddedComponents>()
     val isEmptyTrashShowing = mutableStateOf(false);
@@ -142,20 +139,24 @@ class ConspiratorsViewModel(val boards: List<Board>, val users: List<User>): Vie
         var showCameraView: Boolean = false
     }
 
-    fun addListener() {
+    fun addListenerForBoardsWithUserId(userId: String = "") {
+        if (thisUser == null) {
+            return
+        }
+        val id = thisUser!!.uid
         viewModelScope.launch() {
-            if (thisUser != null) storageService.addListener(
-                thisUser!!.uid,
-                {wasDocumentDeleted: Boolean, board: com.csci448.bam.conspirators.data.firestore.Board -> onDocumentEvent(wasDocumentDeleted, board)},
+            storageService.addListenerForBoardsWithUserId(
+                id,
+                {wasDocumentDeleted: Boolean, board: com.csci448.bam.conspirators.data.firestore.Board -> onBoardsWithUserIdDocumentEvent(wasDocumentDeleted, board)},
                 {})
         }
     }
 
-    fun onDocumentEvent(wasDocumentDeleted: Boolean, board: com.csci448.bam.conspirators.data.firestore.Board) {
+    fun onBoardsWithUserIdDocumentEvent(wasDocumentDeleted: Boolean, board: com.csci448.bam.conspirators.data.firestore.Board) {
         if (wasDocumentDeleted) mBoards.remove(board.id) else mBoards[board.id] = board
     }
 
-    fun removeListener() {
-        viewModelScope.launch() { storageService.removeListener() }
+    fun removeListenerForBoardsWithUserId() {
+        viewModelScope.launch() { storageService.removeListenerForBoardsWithUserId() }
     }
 }

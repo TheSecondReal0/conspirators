@@ -40,7 +40,7 @@ import com.csci448.bam.conspirators.R
 import com.csci448.bam.conspirators.data.AddedComponents
 import com.csci448.bam.conspirators.data.AddedComponents.Companion.scale
 import com.csci448.bam.conspirators.data.AddedComponents.Companion.screenSize
-import com.csci448.bam.conspirators.data.Board
+import com.csci448.bam.conspirators.data.firestore.Board
 import java.util.UUID
 
 @Composable
@@ -53,8 +53,8 @@ fun BoardCardExpanded(board: Board, closeClicked: ()-> Unit, editClicked: ()-> U
         Row(modifier = Modifier.align(Alignment.TopCenter)) {
             TextField(boardTitle,
                 onValueChange = {
-                    boardTitle = it
-                    board.name = boardTitle
+//                    boardTitle = it
+//                    board.name = boardTitle
                 },
                 maxLines = 3
             )
@@ -72,5 +72,5 @@ fun BoardCardExpanded(board: Board, closeClicked: ()-> Unit, editClicked: ()-> U
 @Preview
 @Composable
 fun PreviewBoardCardExpanded() {
-    BoardCardExpanded(Board(R.drawable.sample_image, name = "heck", UUID.randomUUID()), closeClicked = {}, editClicked = {})
+//    BoardCardExpanded(Board(R.drawable.sample_image, name = "heck", UUID.randomUUID()), closeClicked = {}, editClicked = {})
 }

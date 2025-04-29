@@ -21,27 +21,23 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
 
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.csci448.bam.conspirators.DrawingViewModel.SelectedTool
 
 import com.csci448.bam.conspirators.R
-import com.csci448.bam.conspirators.data.Board
-import com.csci448.bam.conspirators.data.User
+import com.csci448.bam.conspirators.data.firestore.Board
 import com.csci448.bam.conspirators.ui.sharedComponents.BoardCard
 import com.csci448.bam.conspirators.ui.sharedComponents.BoardCardExpanded
 import com.csci448.bam.conspirators.viewmodel.ConspiratorsViewModel
-import java.util.UUID
 
 @Composable
-fun HomeScreen(modifier: Modifier, conspiratorsViewModel: ConspiratorsViewModel, editClicked: () -> Unit) {
+fun HomeScreen(modifier: Modifier, conspiratorsViewModel: ConspiratorsViewModel, editClicked: (Board) -> Unit) {
     var displayExpandedView by remember { mutableStateOf(false) }
     var boardToView: Board? by remember { mutableStateOf(null) }
     DisposableEffect(conspiratorsViewModel) {
-        conspiratorsViewModel.addListener()
-        onDispose { conspiratorsViewModel.removeListener() }
+        conspiratorsViewModel.addListenerForBoardsWithUserId()
+        onDispose { conspiratorsViewModel.removeListenerForBoardsWithUserId() }
     }
 
     Column(modifier = modifier.fillMaxSize()) {
@@ -65,7 +61,7 @@ fun HomeScreen(modifier: Modifier, conspiratorsViewModel: ConspiratorsViewModel,
                     image = R.drawable.sample_image,
                     onClick = {
                         displayExpandedView = true
-                        boardToView = conspiratorsViewModel.boards[0]
+                        boardToView = item
                     },
                     userName = "sample user"
                 )
@@ -81,7 +77,7 @@ fun HomeScreen(modifier: Modifier, conspiratorsViewModel: ConspiratorsViewModel,
                     displayExpandedView = false
                 },
                 editClicked = {
-                    editClicked()
+                    editClicked(boardToView!!)
                     Log.i("HS", "edit clicked")
                 }
             )

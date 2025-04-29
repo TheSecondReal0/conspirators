@@ -2,13 +2,19 @@ package com.csci448.bam.conspirators.ui.navigation.specs
 
 import android.content.Context
 import android.net.Uri
+import android.util.Log
+import androidx.compose.foundation.layout.Column
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
 import androidx.compose.ui.Modifier
 import androidx.navigation.NamedNavArgument
 import androidx.navigation.NavBackStackEntry
 import androidx.navigation.NavHostController
+import androidx.navigation.NavType
+import androidx.navigation.navArgument
 import com.csci448.bam.conspirators.R
+import com.csci448.bam.conspirators.data.firestore.Board
 import com.csci448.bam.conspirators.ui.board.BoardScreen
 import com.csci448.bam.conspirators.viewmodel.ConspiratorsViewModel
 import java.io.File
@@ -18,12 +24,31 @@ import java.util.concurrent.ExecutorService
 
 data object BoardScreenSpec : IScreenSpec {
     private const val LOG_TAG = "448.BoardScreenSpec"
+    private const val ARG_BOARD_ID_NAME: String = "id"
 
     override val title = R.string.app_name
 
-    override val route = "board"
-    override val arguments: List<NamedNavArgument> = emptyList()
-    override fun buildRoute(vararg args: String?): String = route
+    override val route = buildRoute(ARG_BOARD_ID_NAME)
+    override val arguments: List<NamedNavArgument> = listOf(
+        navArgument(ARG_BOARD_ID_NAME) {
+            type = NavType.StringType
+        }
+    )
+    fun buildFullRoute(boardId: String): String {
+        var fullRoute = "board"
+        val argVal = boardId
+        if(argVal == ARG_BOARD_ID_NAME) {
+            fullRoute += "/{$argVal}"
+            Log.d(LOG_TAG, "Built base route $fullRoute")
+        } else {
+            fullRoute += "/$argVal"
+            Log.d(LOG_TAG, "Built specific route $fullRoute")
+        }
+        return fullRoute
+    }
+    override fun buildRoute(vararg args: String?): String {
+        return buildFullRoute(args[0] ?: "")
+    }
 
     @Composable
     override fun Content(
@@ -37,7 +62,20 @@ data object BoardScreenSpec : IScreenSpec {
         cameraExecutor: ExecutorService,
         handleImageCapture: (Uri) -> Unit
     ) {
-        BoardScreen(conspiratorsViewModel, modifier, homeClicked = {navController.navigate(HomeScreenSpec.route)}, shouldShowCamera, outputDirectory, cameraExecutor, handleImageCapture)
+        val board: Board? = conspiratorsViewModel.board
+        if (board == null) {
+            Text("null board")
+        } else {
+            Column {
+                Text("Board ID: ${board.id}")
+                Text("User ID: ${board.userId}")
+                Text("Board Name: ${board.name}")
+            }
+        }
+        val idStr: String = navBackStackEntry.arguments?.getString(ARG_BOARD_ID_NAME) ?: ""
+        Log.d(LOG_TAG, "Retrieved id $idStr from navBackStackEntry")
+        conspiratorsViewModel.loadBoard(idStr)
+//        BoardScreen(conspiratorsViewModel, modifier, homeClicked = {navController.navigate(HomeScreenSpec.route)}, shouldShowCamera, outputDirectory, cameraExecutor, handleImageCapture)
     }
 
 //    @Composable

@@ -45,7 +45,7 @@ object HomeScreenSpec: IScreenSpec {
     ) {
         HomeScreen(modifier, conspiratorsViewModel, editClicked = {
             Log.i(LOG_TAG, "going to edit page")
-            navController.navigate(BoardScreenSpec.route)
+            navController.navigate(BoardScreenSpec.buildRoute(it.id))
         })
     }
 
