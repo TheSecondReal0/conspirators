@@ -1,6 +1,7 @@
 package com.csci448.bam.conspirators.viewmodel
 
 
+import android.net.Uri
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateMapOf
@@ -158,5 +159,15 @@ class ConspiratorsViewModel(val boards: List<Board>, val users: List<User>): Vie
 
     fun removeListenerForBoardsWithUserId() {
         viewModelScope.launch() { storageService.removeListenerForBoardsWithUserId() }
+    }
+
+    // fileName doesn't need to be unique
+    // onSuccess string parameter will be URL we can use to download the image again
+    fun uploadImage(imageUri: Uri, fileName: String, onSuccess: (String) -> Unit, onError: (Throwable) -> Unit) {
+        storageService.uploadImage(
+            imageUri = imageUri,
+            fileName = fileName,
+            onSuccess = onSuccess,
+            onError = onError)
     }
 }

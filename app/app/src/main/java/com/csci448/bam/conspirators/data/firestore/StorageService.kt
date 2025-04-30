@@ -1,7 +1,6 @@
 package com.csci448.bam.conspirators.data.firestore
 
 import android.net.Uri
-import java.net.URI
 
 interface StorageService {
     fun addListenerForBoardsWithUserId(
@@ -16,6 +15,6 @@ interface StorageService {
     fun updateBoard(board: Board, onResult: (Throwable?) -> Unit)
     fun deleteBoard(boardId: String, onResult: (Throwable?) -> Unit)
 
-    // fileName must be unique, something like board ID + timestamp or smth would work
-    fun uploadImage(imageURI: Uri, fileName: String, onSuccess: (String) -> Unit, onError: (Throwable) -> Unit)
+    // fileName doesn't need to be unique
+    fun uploadImage(imageUri: Uri, fileName: String, onSuccess: (String) -> Unit, onError: (Throwable) -> Unit)
 }

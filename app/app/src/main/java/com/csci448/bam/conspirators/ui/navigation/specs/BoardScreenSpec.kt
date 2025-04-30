@@ -3,11 +3,16 @@ package com.csci448.bam.conspirators.ui.navigation.specs
 import android.content.Context
 import android.net.Uri
 import android.util.Log
+import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Column
+import androidx.compose.material3.Button
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.navigation.NamedNavArgument
 import androidx.navigation.NavBackStackEntry
 import androidx.navigation.NavHostController
@@ -70,6 +75,11 @@ data object BoardScreenSpec : IScreenSpec {
                 Text("Board ID: ${board.id}")
                 Text("User ID: ${board.userId}")
                 Text("Board Name: ${board.name}")
+                PickAndUploadImage(
+                    conspiratorsViewModel = conspiratorsViewModel,
+                    boardId = board.id!!,
+                    fileName = "cool_fella"
+                )
             }
         }
         val idStr: String = navBackStackEntry.arguments?.getString(ARG_BOARD_ID_NAME) ?: ""
@@ -85,4 +95,50 @@ data object BoardScreenSpec : IScreenSpec {
 //            Icon(Icons.Filled.AddCircle, contentDescription = "New Board")
 //        }
 //    }
+
+
+    @Composable
+    fun PickAndUploadImage(
+        conspiratorsViewModel: ConspiratorsViewModel,
+        boardId: String,
+        fileName: String = "test_image"
+    ) {
+        val context = LocalContext.current
+
+        // Set up the gallery picker
+        val launcher = rememberLauncherForActivityResult(
+            ActivityResultContracts.GetContent()
+        ) { uri: Uri? ->
+            uri?.let {
+                uploadImageToFirebase(
+                    conspiratorsViewModel = conspiratorsViewModel,
+                    context   = context,
+                    imageUri  = it,
+                    fileName = fileName,
+                )
+            }
+        }
+
+        Button(onClick = { launcher.launch("image/*") }) {
+            Text("Pick & Upload Image")
+        }
+    }
+
+    private fun uploadImageToFirebase(
+        conspiratorsViewModel: ConspiratorsViewModel,
+        context: Context,
+        imageUri: Uri,
+        fileName: String,
+    ) {
+        conspiratorsViewModel.uploadImage(
+            imageUri = imageUri,
+            fileName = fileName,
+            onSuccess = {
+                Toast.makeText(context, "Uploaded!\n$it", Toast.LENGTH_LONG).show()
+            },
+            onError = { e ->
+                Toast.makeText(context, "Upload failed: ${e.message}", Toast.LENGTH_LONG).show()
+            }
+        )
+    }
 }

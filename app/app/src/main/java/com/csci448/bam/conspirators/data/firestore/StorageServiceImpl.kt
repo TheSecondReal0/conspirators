@@ -109,11 +109,10 @@ class StorageServiceImpl : StorageService {
         return obj
     }
 
-    // fileName must be unique, something like board ID + timestamp or smth would work
     override fun uploadImage(imageUri: Uri, fileName: String, onSuccess: (String) -> Unit, onError: (Throwable) -> Unit) {
         val storageRef = FirebaseStorage.getInstance()
             .reference
-            .child("fileName")
+            .child(fileName)
 
         storageRef.putFile(imageUri)
             .addOnProgressListener { snap ->
