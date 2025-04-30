@@ -74,53 +74,56 @@ data object BoardScreenSpec : IScreenSpec {
         var testBoard by remember { mutableStateOf(Board(name = "test_fella")) }
 
         val board: Board? = conspiratorsViewModel.board
-        if (board == null) {
-            Text("null board")
-        } else {
-            Column {
+
+        Column(
+            modifier = modifier
+        ) {
+            if (board == null) {
+                Text("null board")
+            } else {
                 Text("Board ID: ${board.id}")
                 Text("User ID: ${board.userId}")
                 Text("Board Name: ${board.name}")
-                PickAndUploadImage(
-                    conspiratorsViewModel = conspiratorsViewModel,
-                    boardId = board.id!!,
-                    fileName = "cool_fella"
-                )
+            }
 
-                Button(onClick = {
-                    conspiratorsViewModel.saveBoard(
-                        Board(name = "test_fella"),
-                        onSuccess = {
-                            Toast.makeText(context, "Test board saved successfully: $it", Toast.LENGTH_LONG).show()
-                            Log.d(LOG_TAG, "Test board saved: $it")
-                            testBoard = it
-                                    },
-                        onError = {Toast.makeText(context, "Failed to save board: $it", Toast.LENGTH_LONG).show()})
-                }) {
-                    Text("Save test board")
-                }
+            PickAndUploadImage(
+                conspiratorsViewModel = conspiratorsViewModel,
+                fileName = "cool_fella"
+            )
 
-                Button(onClick = {
-                    conspiratorsViewModel.updateBoard(
-                        testBoard.copy(name = "test_fella_updated"),
-                        onResult = {
-                            Toast.makeText(context, "Test board updated: $it", Toast.LENGTH_LONG).show()
-                            Log.d(LOG_TAG, "Test board updated: $it")
-                        })
-                }) {
-                    Text("Update test board")
-                }
+            Button(onClick = {
+                conspiratorsViewModel.saveBoard(
+                    Board(name = "test_fella"),
+                    onSuccess = {
+                        Toast.makeText(context, "Test board saved successfully: $it", Toast.LENGTH_LONG).show()
+                        Log.d(LOG_TAG, "Test board saved: $it")
+                        testBoard = it
+                    },
+                    onError = {Toast.makeText(context, "Failed to save board: $it", Toast.LENGTH_LONG).show()})
+            }) {
+                Text("Save test board")
+            }
 
-                Button(onClick = {
-                    conspiratorsViewModel.deleteBoard(
-                        testBoard.id!!,
-                        onResult = {
-                            Toast.makeText(context, "Test board deleted: $it", Toast.LENGTH_LONG).show()
-                            Log.d(LOG_TAG, "Test board deleted: $it")
-                        })
-                }) {
-                    Text("Delete test board")
-                }
+            Button(onClick = {
+                conspiratorsViewModel.updateBoard(
+                    testBoard.copy(name = "test_fella_updated"),
+                    onResult = {
+                        Toast.makeText(context, "Test board updated: $it", Toast.LENGTH_LONG).show()
+                        Log.d(LOG_TAG, "Test board updated: $it")
+                    })
+            }) {
+                Text("Update test board")
+            }
+
+            Button(onClick = {
+                conspiratorsViewModel.deleteBoard(
+                    testBoard.id ?: "fake_id_shouldnt_be_used",
+                    onResult = {
+                        Toast.makeText(context, "Test board deleted: $it", Toast.LENGTH_LONG).show()
+                        Log.d(LOG_TAG, "Test board deleted: $it")
+                    })
+            }) {
+                Text("Delete test board")
             }
         }
         val idStr: String = navBackStackEntry.arguments?.getString(ARG_BOARD_ID_NAME) ?: ""
@@ -141,7 +144,6 @@ data object BoardScreenSpec : IScreenSpec {
     @Composable
     fun PickAndUploadImage(
         conspiratorsViewModel: ConspiratorsViewModel,
-        boardId: String,
         fileName: String = "test_image"
     ) {
         val context = LocalContext.current
