@@ -1,5 +1,6 @@
 package com.csci448.bam.conspirators.data.firestore
 
+import android.net.Uri
 import android.util.Log
 import com.google.firebase.firestore.ListenerRegistration
 import com.google.firebase.firestore.DocumentChange
@@ -7,6 +8,7 @@ import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.QueryDocumentSnapshot
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
+import com.google.firebase.storage.FirebaseStorage
 
 class StorageServiceImpl : StorageService {
     companion object {
@@ -105,5 +107,29 @@ class StorageServiceImpl : StorageService {
             id = doc.id
         )
         return obj
+    }
+
+    // fileName must be unique, something like board ID + timestamp or smth would work
+    override fun uploadImage(imageUri: Uri, fileName: String, onSuccess: (String) -> Unit, onError: (Throwable) -> Unit) {
+        val storageRef = FirebaseStorage.getInstance()
+            .reference
+            .child("fileName")
+
+        storageRef.putFile(imageUri)
+            .addOnProgressListener { snap ->
+                val percent = 100.0 * snap.bytesTransferred / snap.totalByteCount
+                Log.d(LOG_TAG, "Uploading: ${percent.toInt()}%")
+            }
+            .addOnSuccessListener {
+                // 3) Once the file is uploaded, get its public download URL
+                storageRef.downloadUrl.addOnSuccessListener { downloadUri ->
+                    Log.d(LOG_TAG, "Retrieved download url: $downloadUri")
+                    onSuccess(downloadUri.toString())
+                }
+            }
+            .addOnFailureListener { e ->
+                Log.e(LOG_TAG, "Upload failed", e)
+                onError(e)
+            }
     }
 }

@@ -153,7 +153,7 @@ class ConspiratorsViewModel(val boards: List<Board>, val users: List<User>): Vie
     }
 
     fun onBoardsWithUserIdDocumentEvent(wasDocumentDeleted: Boolean, board: com.csci448.bam.conspirators.data.firestore.Board) {
-        if (wasDocumentDeleted) mBoards.remove(board.id) else mBoards[board.id] = board
+        if (wasDocumentDeleted) mBoards.remove(board.id!!) else mBoards[board.id!!] = board
     }
 
     fun removeListenerForBoardsWithUserId() {

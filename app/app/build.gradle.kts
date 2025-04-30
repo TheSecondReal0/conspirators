@@ -54,6 +54,7 @@ dependencies {
     // CameraX view integration (for Camera Preview)
     implementation(libs.androidx.camera.view.v130)
     implementation(libs.firebase.firestore.ktx)
+    implementation(libs.firebase.storage.ktx)
     ksp(libs.androidx.room.compiler)
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)

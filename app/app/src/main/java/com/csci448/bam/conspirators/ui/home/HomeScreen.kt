@@ -55,7 +55,7 @@ fun HomeScreen(modifier: Modifier, conspiratorsViewModel: ConspiratorsViewModel,
             modifier = Modifier.weight(1f),
             columns = GridCells.Fixed(2)
         ) {
-            items(conspiratorsViewModel.mBoards.values.toList(), key = { it.id }) { item ->
+            items(conspiratorsViewModel.mBoards.values.toList(), key = { it.id!! }) { item ->
                 BoardCard(
                     title = item.name,
                     image = R.drawable.sample_image,
