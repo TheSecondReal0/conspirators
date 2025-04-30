@@ -35,6 +35,17 @@ class ConspiratorsViewModel(val boards: List<Board>, val users: List<User>): Vie
 
     val mBoards = mutableStateMapOf<String, com.csci448.bam.conspirators.data.firestore.Board>()
 
+    val mFirebaseBoards = mutableStateMapOf<String, com.csci448.bam.conspirators.data.firestore.Board>()
+    val firebaseBoardValues: List<com.csci448.bam.conspirators.data.firestore.Board> get() = mFirebaseBoards.values.toList()
+    init {
+        storageService.getAllBoards(
+            onSuccess = {
+                it.forEach {id, board -> mFirebaseBoards[id] = board }
+            },
+            onError = {}
+        )
+    }
+
     /*
     fun testDB() {
         database.collection("test").add(hashMapOf(

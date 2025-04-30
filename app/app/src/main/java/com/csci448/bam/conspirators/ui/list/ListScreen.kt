@@ -61,8 +61,10 @@ fun ListScreen(modifier: Modifier, conspiratorsViewModel: ConspiratorsViewModel)
         }
         LazyVerticalGrid (modifier = Modifier.fillMaxSize().padding(horizontal = 5.dp, vertical = 3.dp), columns = GridCells.Fixed(2))
         {
-            items(conspiratorsViewModel.boards) { item ->
-                BoardCard(title = item.name, image = R.drawable.sample_image, onClick = {}, userName = conspiratorsViewModel.getUserNameByUUID(item.userUUID))
+//            items(conspiratorsViewModel.boards) { item ->
+            items(conspiratorsViewModel.firebaseBoardValues) { item ->
+//                BoardCard(title = item.name, image = R.drawable.sample_image, onClick = {}, userName = conspiratorsViewModel.getUserNameByUUID(item.userUUID))
+                BoardCard(title = item.name, image = R.drawable.sample_image, onClick = {}, userName = "")
             }
         }
     }

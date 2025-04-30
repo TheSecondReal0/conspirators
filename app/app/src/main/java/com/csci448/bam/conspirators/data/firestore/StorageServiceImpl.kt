@@ -5,6 +5,7 @@ import android.util.Log
 import com.google.firebase.firestore.ListenerRegistration
 import com.google.firebase.firestore.DocumentChange
 import com.google.firebase.firestore.DocumentSnapshot
+import com.google.firebase.firestore.Filter
 import com.google.firebase.firestore.QueryDocumentSnapshot
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
@@ -99,6 +100,18 @@ class StorageServiceImpl : StorageService {
             .addOnFailureListener {
                 onResult(it)
             }
+    }
+
+    override fun getAllBoards(onSuccess: (Map<String, Board>) -> Unit, onError: (Throwable) -> Unit) {
+        val docRef = Firebase.firestore.collection("boards")
+        docRef.get().addOnSuccessListener {
+            Log.d(LOG_TAG, "Successfully retrieved all boards: $it")
+            val boards: Map<String, Board> = it.documents.associate { doc -> Pair(doc.id, docToBoard(doc)) }
+            onSuccess(boards)
+        } .addOnFailureListener {
+            Log.e(LOG_TAG, "getAllBoards failed with error $it")
+            onError(it)
+        }
     }
 
     private fun docToBoard(doc: DocumentSnapshot): Board {

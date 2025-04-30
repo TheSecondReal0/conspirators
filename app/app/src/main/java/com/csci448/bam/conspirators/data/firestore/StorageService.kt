@@ -15,6 +15,8 @@ interface StorageService {
     fun updateBoard(board: Board, onResult: (Throwable?) -> Unit)
     fun deleteBoard(boardId: String, onResult: (Throwable?) -> Unit)
 
+    fun getAllBoards(onSuccess: (Map<String, Board>) -> Unit, onError: (Throwable) -> Unit)
+
     // fileName doesn't need to be unique
     fun uploadImage(imageUri: Uri, fileName: String, onSuccess: (String) -> Unit, onError: (Throwable) -> Unit)
 }
