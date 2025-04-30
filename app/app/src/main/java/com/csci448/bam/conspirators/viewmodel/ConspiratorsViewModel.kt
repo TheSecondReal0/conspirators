@@ -68,6 +68,22 @@ class ConspiratorsViewModel(val boards: List<Board>, val users: List<User>): Vie
         )
     }
 
+    fun saveBoard(board: com.csci448.bam.conspirators.data.firestore.Board, onSuccess: (com.csci448.bam.conspirators.data.firestore.Board) -> Unit, onError: (Throwable) -> Unit) {
+        storageService.saveBoard(
+            board = board,
+            onSuccess = onSuccess,
+            onError = onError,
+        )
+    }
+
+    fun updateBoard(board: com.csci448.bam.conspirators.data.firestore.Board, onResult: (Throwable?) -> Unit) {
+        storageService.updateBoard(board, onResult = onResult)
+    }
+
+    fun deleteBoard(boardId: String, onResult: (Throwable?) -> Unit) {
+        storageService.deleteBoard(boardId, onResult = onResult)
+    }
+
     // all related to board drawing
     val conspiracyEvidences = mutableStateListOf<AddedComponents>()
     val isEmptyTrashShowing = mutableStateOf(false);
