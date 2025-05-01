@@ -68,6 +68,7 @@ dependencies {
     implementation(libs.kotlin.reflect)
     implementation(libs.coil.compose)
     testImplementation(libs.junit)
+    implementation(libs.androidx.material.icons.extended)
     implementation(libs.firebase.ui.auth)
     implementation(platform(libs.firebase.bom))
     implementation(libs.firebase.analytics)

@@ -2,6 +2,7 @@ package com.csci448.bam.conspirators.data.firestore
 
 import android.net.Uri
 import android.util.Log
+import com.csci448.bam.conspirators.data.converters.ConnectionFB
 import com.google.firebase.firestore.ListenerRegistration
 import com.google.firebase.firestore.DocumentChange
 import com.google.firebase.firestore.DocumentSnapshot
@@ -102,6 +103,7 @@ class StorageServiceImpl : StorageService {
             }
     }
 
+
     override fun getAllBoards(onSuccess: (Map<String, Board>) -> Unit, onError: (Throwable) -> Unit) {
         val docRef = Firebase.firestore.collection("boards")
         docRef.get().addOnSuccessListener {
@@ -114,35 +116,84 @@ class StorageServiceImpl : StorageService {
         }
     }
 
+//TODO uncomment this after nuking old database
+/*
+private fun docToBoard(doc: DocumentSnapshot): Board {
+    var obj: Board? = doc.toObject(Board::class.java)
+    if (obj == null) return Board()
+    obj = obj!!.copy(
+        id = doc.id
+    )
+    return obj
+}
+
+ */
+//TODO delete this after the nuke
     private fun docToBoard(doc: DocumentSnapshot): Board {
-        var obj: Board? = doc.toObject(Board::class.java)
-        if (obj == null) return Board()
-        obj = obj!!.copy(
-            id = doc.id
-        )
-        return obj
-    }
+        val id = doc.id
+        val userId = doc.getString("userId") ?: ""
+        val name = doc.getString("name") ?: ""
 
-    override fun uploadImage(imageUri: Uri, fileName: String, onSuccess: (String) -> Unit, onError: (Throwable) -> Unit) {
-        val storageRef = FirebaseStorage.getInstance()
-            .reference
-            .child(fileName)
+        val imageMap = doc.get("images") as? Map<String, Map<String, Any>> ?: emptyMap()
+        val images = imageMap.mapValues { (_, value) ->
+            Image(
+                imageUrl = value["imageUrl"] as? String ?: "",
+                x = (value["x"] as? Number)?.toDouble() ?: 0.0,
+                y = (value["y"] as? Number)?.toDouble() ?: 0.0
+            )
+        }
 
-        storageRef.putFile(imageUri)
-            .addOnProgressListener { snap ->
-                val percent = 100.0 * snap.bytesTransferred / snap.totalByteCount
-                Log.d(LOG_TAG, "Uploading: ${percent.toInt()}%")
+        val connectionsRaw = doc.get("connections")
+        val connections = when (connectionsRaw) {
+            is List<*> -> connectionsRaw.mapNotNull { item ->
+                val map = item as? Map<*, *> ?: return@mapNotNull null
+                ConnectionFB(
+                    componentId1 = map["componentId1"] as? String ?: "",
+                    componentId2 = map["componentId2"] as? String ?: "",
+                    label = map["label"] as? String ?: ""
+                )
             }
-            .addOnSuccessListener {
-                // 3) Once the file is uploaded, get its public download URL
-                storageRef.downloadUrl.addOnSuccessListener { downloadUri ->
-                    Log.d(LOG_TAG, "Retrieved download url: $downloadUri")
-                    onSuccess(downloadUri.toString())
+
+            is Map<*, *> -> {
+                // handle old map format (e.g., {"id1": "id2"})
+                connectionsRaw.mapNotNull { (k, v) ->
+                    if (k is String && v is String) {
+                        ConnectionFB(k, v)
+                    } else null
                 }
             }
-            .addOnFailureListener { e ->
-                Log.e(LOG_TAG, "Upload failed", e)
-                onError(e)
-            }
+
+            else -> emptyList()
+        }
+        return Board(
+            id = id,
+            userId = userId,
+            name = name,
+            images = images,
+            connections = connections
+        )
     }
+
+override fun uploadImage(imageUri: Uri, fileName: String, onSuccess: (String) -> Unit, onError: (Throwable) -> Unit) {
+    val storageRef = FirebaseStorage.getInstance()
+        .reference
+        .child(fileName)
+
+    storageRef.putFile(imageUri)
+        .addOnProgressListener { snap ->
+            val percent = 100.0 * snap.bytesTransferred / snap.totalByteCount
+            Log.d(LOG_TAG, "Uploading: ${percent.toInt()}%")
+        }
+        .addOnSuccessListener {
+            // 3) Once the file is uploaded, get its public download URL
+            storageRef.downloadUrl.addOnSuccessListener { downloadUri ->
+                Log.d(LOG_TAG, "Retrieved download url: $downloadUri")
+                onSuccess(downloadUri.toString())
+            }
+        }
+        .addOnFailureListener { e ->
+            Log.e(LOG_TAG, "Upload failed", e)
+            onError(e)
+        }
+}
 }

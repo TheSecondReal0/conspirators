@@ -1,3 +1,3 @@
 package com.csci448.bam.conspirators.data
 
-data class DrawnConnection(val addedComponent1: AddedComponents, val addedComponent2: AddedComponents, val label: String = "")
+data class DrawnConnection(val addedComponent1: AddedComponent, val addedComponent2: AddedComponent, val label: String = "")

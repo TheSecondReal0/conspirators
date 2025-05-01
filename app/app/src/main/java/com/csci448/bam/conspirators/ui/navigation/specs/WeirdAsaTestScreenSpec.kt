@@ -31,7 +31,7 @@ import java.util.concurrent.ExecutorService
 
 //import com.csci448.bam.conspirators.components.BoardScreen
 
-data object BoardScreenSpec : IScreenSpec {
+data object WeirdAsaTestScreenSpec : IScreenSpec {
     private const val LOG_TAG = "448.BoardScreenSpec"
     private const val ARG_BOARD_ID_NAME: String = "id"
 
@@ -44,7 +44,7 @@ data object BoardScreenSpec : IScreenSpec {
         }
     )
     fun buildFullRoute(boardId: String): String {
-        var fullRoute = "board"
+        var fullRoute = "weird"
         val argVal = boardId
         if(argVal == ARG_BOARD_ID_NAME) {
             fullRoute += "/{$argVal}"
@@ -129,12 +129,7 @@ data object BoardScreenSpec : IScreenSpec {
         val idStr: String = navBackStackEntry.arguments?.getString(ARG_BOARD_ID_NAME) ?: ""
         Log.d(LOG_TAG, "Retrieved id $idStr from navBackStackEntry")
         conspiratorsViewModel.loadBoard(idStr)
-       BoardScreen(
-           conspiratorsViewModel, modifier,
-           outputDirectory = outputDirectory,
-           cameraExecutor = cameraExecutor,
-           handleImageCapture = handleImageCapture
-       )
+//        BoardScreen(conspiratorsViewModel, modifier, homeClicked = {navController.navigate(HomeScreenSpec.route)}, shouldShowCamera, outputDirectory, cameraExecutor, handleImageCapture)
     }
 
 //    @Composable

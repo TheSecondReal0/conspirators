@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">Conspirators</string>
+    <string name="board_create_page_title">New Board</string>
 </resources>

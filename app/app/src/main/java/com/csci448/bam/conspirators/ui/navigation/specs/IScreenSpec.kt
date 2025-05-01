@@ -14,6 +14,7 @@ import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.AddCircle
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -69,40 +70,7 @@ sealed interface IScreenSpec {
     @Composable
     fun TopAppBarContent(vm: ConspiratorsViewModel, navController: NavHostController,
                          navBackStackEntry: NavBackStackEntry?, context: Context) {
-        /*
-       TopAppBar(
-           modifier = Modifier.fillMaxSize(),
-            title = {
-                Text(stringResource(title))
-            },
-            navigationIcon =
-            {},
-            actions = { TopAppBarActions(vm, navController, navBackStackEntry, context) },
-        )
 
-<<<<<<< HEAD
-        TopAppBar(
-            title = {
-                Text(stringResource(title))
-            },
-            navigationIcon =
-                if (navController.previousBackStackEntry != null) {
-                    {
-                        IconButton(onClick = { navController.navigateUp() }) {
-                            Icon(
-                                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                                contentDescription = "Back"
-                            )
-                        }
-                    }
-                } else {
-                    { }
-                },
-            actions = { TopAppBarActions(vm, navController, navBackStackEntry, context) },
-
-        )
-=======
-         */
         Row (Modifier.padding(5.dp).fillMaxHeight(0.1f).fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
             TopAppBarActions(vm, navController, navBackStackEntry, context)
         }
@@ -115,7 +83,7 @@ sealed interface IScreenSpec {
         IconButton(onClick = {navController.navigate(ListScreenSpec.route)}) {
             Icon(Icons.Filled.Search, contentDescription = "Explore")
         }
-        IconButton(onClick = { navController.navigate(BoardScreenSpec.route) }) {
+        IconButton(onClick = { navController.navigate(BoardCreateScreenSpec.route) }) {
             Icon(Icons.Filled.AddCircle, contentDescription = "New Board")
         }
         IconButton(onClick = { navController.navigate(HomeScreenSpec.route)}) {
@@ -123,6 +91,10 @@ sealed interface IScreenSpec {
         }
         IconButton(onClick = {navController.navigate(ProfileScreenSpec.route)}) {
             Icon(Icons.Filled.AccountCircle, contentDescription = "Account")
+        }
+        // TODO delete this
+        IconButton(onClick = { navController.navigate(WeirdAsaTestScreenSpec.route) }) {
+            Icon(Icons.Filled.Warning, contentDescription = "TEST BUTTON")
         }
     }
 }

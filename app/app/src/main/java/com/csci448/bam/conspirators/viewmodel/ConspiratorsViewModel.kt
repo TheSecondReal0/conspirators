@@ -2,18 +2,23 @@ package com.csci448.bam.conspirators.viewmodel
 
 
 import android.net.Uri
+import android.util.Log
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.ui.geometry.Offset
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.csci448.bam.conspirators.DrawingViewModel.SelectedTool
-import com.csci448.bam.conspirators.data.AddedComponents
+import com.csci448.bam.conspirators.data.AddedComponent
 import com.csci448.bam.conspirators.data.Board
+import com.csci448.bam.conspirators.data.converters.ConnectionFB
 import com.csci448.bam.conspirators.data.DrawnConnection
 import com.csci448.bam.conspirators.data.User
+import com.csci448.bam.conspirators.data.converters.ComponentFB
+import com.csci448.bam.conspirators.data.firestore.Image
 import com.csci448.bam.conspirators.data.firestore.StorageService
 import com.csci448.bam.conspirators.data.firestore.StorageServiceImpl
 import com.google.firebase.auth.FirebaseUser
@@ -30,12 +35,13 @@ data class DrawingState(
 )
 
 class ConspiratorsViewModel(val boards: List<Board>, val users: List<User>): ViewModel() {
+
     val database = Firebase.firestore
     val storageService: StorageService = StorageServiceImpl()
 
     val mBoards = mutableStateMapOf<String, com.csci448.bam.conspirators.data.firestore.Board>()
 
-    val mFirebaseBoards = mutableStateMapOf<String, com.csci448.bam.conspirators.data.firestore.Board>()
+    private val mFirebaseBoards = mutableStateMapOf<String, com.csci448.bam.conspirators.data.firestore.Board>()
     val firebaseBoardValues: List<com.csci448.bam.conspirators.data.firestore.Board> get() = mFirebaseBoards.values.toList()
     init {
         storageService.getAllBoards(
@@ -46,22 +52,6 @@ class ConspiratorsViewModel(val boards: List<Board>, val users: List<User>): Vie
         )
     }
 
-    /*
-    fun testDB() {
-        database.collection("test").add(hashMapOf(
-            "firstType" to "Beep",
-            "secondType" to "Beepus"
-        ))
-            .addOnSuccessListener { documentReference ->
-                Log.i("jlkjl", "DocumentSnapshot added with ID: ${documentReference.id}")
-            }
-            .addOnFailureListener { e ->
-                Log.w("jlkjl", "Error adding document", e)
-            }
-    }
-
-     */
-
     // current User
     private val mThisUser: MutableState<FirebaseUser?> = mutableStateOf(null)
     val thisUser get() = mThisUser.value
@@ -71,6 +61,7 @@ class ConspiratorsViewModel(val boards: List<Board>, val users: List<User>): Vie
 
     private val mBoard: MutableState<com.csci448.bam.conspirators.data.firestore.Board?> = mutableStateOf(null)
     val board get() = mBoard.value
+
     fun loadBoard(id: String) {
         storageService.getBoard(
             boardId = id,
@@ -96,7 +87,7 @@ class ConspiratorsViewModel(val boards: List<Board>, val users: List<User>): Vie
     }
 
     // all related to board drawing
-    val conspiracyEvidences = mutableStateListOf<AddedComponents>()
+    val currentBoardComponents = mutableStateListOf<AddedComponent>()
     val isEmptyTrashShowing = mutableStateOf(false);
     val isRecenterButtonShowing = mutableStateOf(false)
     val isZoomPercentShowing = mutableStateOf(false)
@@ -105,6 +96,7 @@ class ConspiratorsViewModel(val boards: List<Board>, val users: List<User>): Vie
     val selectedTool = mutableStateOf(SelectedTool.EDIT)
     private val mConspiracyConnections = mutableListOf<DrawnConnection>()
     val conspiracyConnections = mConspiracyConnections
+    val isSaveLoading = mutableStateOf(false)
 
     // related to board list
     private val mBoardListState = MutableStateFlow(boards)
@@ -116,6 +108,7 @@ class ConspiratorsViewModel(val boards: List<Board>, val users: List<User>): Vie
     val userListState: StateFlow<List<User>>
         get() = mUserListState.asStateFlow()
     val currentUser = mutableStateOf(users[0])
+
     fun getBoardsOfUser(userUUID: UUID): List<Board> {
         val boards: MutableList<Board> = mutableListOf()
         for (board in boardListState.value) {
@@ -138,13 +131,13 @@ class ConspiratorsViewModel(val boards: List<Board>, val users: List<User>): Vie
 
     // board editing functions
     fun rescaleAllComponents(scale: Float) {
-        AddedComponents.scale.floatValue = scale
-        conspiracyEvidences.forEach { item ->
+        AddedComponent.scale.floatValue = scale
+        currentBoardComponents.forEach { item ->
             item.rescale()
         }
     }
 
-    fun editConnection(evidence1: AddedComponents, evidence2: AddedComponents) {
+    fun editConnection(evidence1: AddedComponent, evidence2: AddedComponent) {
         val iterator = mConspiracyConnections.iterator()
         var addComp = true
         while (iterator.hasNext()) {
@@ -160,11 +153,177 @@ class ConspiratorsViewModel(val boards: List<Board>, val users: List<User>): Vie
         }
     }
 
+    // create new board page
+    val currentBoardTitle = mutableStateOf<String>("")
+    val currentThumbnailImage = mutableStateOf<Uri?>(null)
+    fun createNewBoard() {
+        // add board to database
+        mBoard.value = com.csci448.bam.conspirators.data.firestore.Board(
+            id = null,
+            userId = mThisUser.value?.uid.toString(),
+            name = currentBoardTitle.value,
+        )
+        Log.i(LOG_TAG, "board made for with UUID: ${mBoard.value!!.id.toString()} by ")
+        //TODO I assume it automatically gets detected by FireStore list? but if not, update list
+    }
 
-    val showCameraView = false
+    // update the current board that we're on
+    fun saveCurrentBoardConfigAndUpload(){
+        mergeNewImagesIntoBoard()
+        mergeNewConnectionsIntoBoard()
+        Log.i(LOG_TAG, "merges complete")
+        currentBoardComponents.forEach { compn ->
+            if(compn.uri != null) {//TODO this is a sloppy method of overwriting prevention
+                compn.id.let {
+                    storageService.uploadImage(
+                        compn.uri!!,
+                        fileName = it,
+                        onSuccess = {
+                            Log.i(LOG_TAG, "Img ${compn.id} successfully uploaded")
+                        },
+                        onError = {
+                            Log.d(LOG_TAG, "Img ${compn.id} failed to upload")
+                        }
+                    )
+                }
+            }
+        }
+        val board = mBoard.value ?: return
+
+        val boardToSave = board.copy(
+            images = mBoard.value!!.images,
+            connections = mBoard.value!!.connections,
+        )
+        Log.i(LOG_TAG, "merged again")
+        if (board.id == null) {
+            storageService.saveBoard(boardToSave,
+                onSuccess = { savedBoard ->
+                    mBoard.value = savedBoard
+                    Log.i(LOG_TAG, "saved a new board")
+                },
+                onError = { e ->
+                    Log.i(LOG_TAG, "failed to save a new board")
+                    Log.d(LOG_TAG, e.printStackTrace().toString())
+                }
+            )
+
+        } else {
+            storageService.updateBoard(boardToSave) { error ->
+                if (error == null) {
+                    Log.i(LOG_TAG, "updated an old board")
+                    isSaveLoading.value = false
+                } else {
+                    Log.i(LOG_TAG, "failed to update old board")
+                    isSaveLoading.value = false
+                }
+            }
+        }
+        isSaveLoading.value = false
+    }
+    val uploadedUrls = mutableMapOf<String, String>() // componentId to downloadUrl
+
+    private fun mergeNewImagesIntoBoard() {
+        val board = mBoard.value ?: return
+        val currentImagesMap = board.images.toMutableMap()
+        for (component in currentBoardComponents) {
+            if (component.id !in currentImagesMap) {
+                Log.i(LOG_TAG, "adding component to firestore form")
+                val firebaseImage = component.toFirebaseImage()
+                if (firebaseImage != null && component.id != null) {
+                    currentImagesMap[component.id] = firebaseImage
+                }
+            }
+        }
+        // board now updated with images
+        mBoard.value = board.copy(images = currentImagesMap)
+    }
+
+
+    private fun AddedComponent.toFirebaseImage(): Image? {
+        val url = this.url ?: return null // If it hasn't been uploaded yet, skip
+        return Image(
+            imageUrl = url,
+            x = this.offset.value.x.toDouble(),
+            y = this.offset.value.y.toDouble()
+        )
+    }
+
+    fun pullCurrentBoardDataFromFB() {
+        mBoard.value?.images?.forEach{ img ->
+            currentBoardComponents.add(
+                AddedComponent(
+                    uri = null,
+                    context = null,
+                    offset = mutableStateOf(Offset(x = img.value.x.toFloat(), y = img.value.y.toFloat())),
+                    title = mutableStateOf(""),
+                    url = img.value.imageUrl
+                )
+            )
+        }
+//TODO finish this and above, make sure to check the values arent already added to our list
+        mBoard.value?.connections?.forEach { conc ->
+            val newConc = conc?.toAddedConnection()
+            if (newConc != null && conspiracyConnections.find { drawnConnection -> drawnConnection.addedComponent2.id == newConc.addedComponent1.id }) {
+
+            }
+        }
+    }
+
+    private fun ComponentFB.toAddedComp() : AddedComponent {
+        return AddedComponent(
+            uri = null,
+            context = null,
+            offset = mutableStateOf(Offset(this.x.toFloat(), this.y.toFloat())),
+            title = mutableStateOf(this.title),
+            id = this.id,
+            url = this.imageUrl
+        )
+    }
+
+    private fun ConnectionFB.toAddedConnection() : DrawnConnection? {
+        val id1 = currentBoardComponents.find { addedComponent -> addedComponent.id == this.componentId1 }
+        val id2 = currentBoardComponents.find { addedComponent -> addedComponent.id == this.componentId2 }
+        if(id1 != null && id2 != null)
+        return DrawnConnection(
+            addedComponent1 = id1,
+            addedComponent2 = id2,
+            label = this.label
+        )
+        return null
+    }
+
+    private fun mergeNewConnectionsIntoBoard() {
+        val board = mBoard.value ?: return
+        val currentConnectionsFB = mBoard.value!!.connections.toMutableList()
+        for (component in conspiracyConnections) {
+            val tryComp = component.toFirebaseConnection()
+            if (tryComp !in currentConnectionsFB) {
+                if (tryComp != null) {
+                    currentConnectionsFB.add(tryComp)
+                }
+            }
+        }
+        // board now updated with connection
+        mBoard.value = board.copy(connections = currentConnectionsFB)
+    }
+
+    private fun DrawnConnection.toFirebaseConnection(): ConnectionFB? {
+        if(addedComponent1.id !=null && addedComponent2.id != null) {
+            return ConnectionFB(
+                this.addedComponent1.id,
+                this.addedComponent2.id,
+                this.label)
+        }
+        else return null
+    }
+
+    val showCameraView = mutableStateOf(false)
+
+    val offset = mutableStateOf(Offset.Zero)
 
     companion object {
         var showCameraView: Boolean = false
+        const val LOG_TAG = "VM"
     }
 
     fun addListenerForBoardsWithUserId(userId: String = "") {
@@ -197,4 +356,6 @@ class ConspiratorsViewModel(val boards: List<Board>, val users: List<User>): Vie
             onSuccess = onSuccess,
             onError = onError)
     }
+
+
 }

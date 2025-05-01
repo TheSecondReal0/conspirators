@@ -28,9 +28,12 @@ import com.csci448.bam.conspirators.viewmodel.ConspiratorsViewModel
 import com.google.firebase.auth.FirebaseAuth
 import android.Manifest
 import android.annotation.SuppressLint
+import android.content.Context
 import android.net.Uri
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.ui.geometry.Offset
+import com.csci448.bam.conspirators.data.AddedComponent
 import com.firebase.ui.auth.AuthUI
 import com.firebase.ui.auth.FirebaseAuthUIActivityResultContract
 import com.firebase.ui.auth.data.model.FirebaseAuthUIAuthenticationResult
@@ -129,15 +132,18 @@ class MainActivity : ComponentActivity() {
                             shouldShowCamera,
                             outputDirectory,
                             cameraExecutor,
-
-                            ) { uri: Uri -> handleImageCapture(uri) }
+                            ) {
+                            uri: Uri -> handleImageCapture(
+                            uri,
+                            currentContext = context
+                        )
+                        }
                         ConspiratorsTopBar(navController, conspiratorsViewModel, context)
                     }
                 }
             }
         }
         requestCameraPermission()
-
         outputDirectory = getOutputDirectory()
         cameraExecutor = Executors.newSingleThreadExecutor()
     }
@@ -195,11 +201,20 @@ class MainActivity : ComponentActivity() {
     private lateinit var photoUri: Uri
     private var shouldShowPhoto: MutableState<Boolean> = mutableStateOf(false)
 
-    fun handleImageCapture(uri: Uri) {
+    fun handleImageCapture(uri: Uri, currentContext: Context) {
         Log.i("kilo", "Image captured: $uri")
         shouldShowCamera.value = false
         photoUri = uri
         shouldShowPhoto.value = true
+        conspiratorsViewModel.currentBoardComponents.add(
+            AddedComponent(
+            uri = photoUri,
+            context = currentContext,
+            offset = mutableStateOf(-conspiratorsViewModel.offset.value + Offset(currentContext.resources.displayMetrics.widthPixels.toFloat()/2f,
+                currentContext.resources.displayMetrics.heightPixels.toFloat()/2f)
+            )
+        )
+        )
     }
 
     private fun getOutputDirectory(): File {
