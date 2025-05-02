@@ -35,14 +35,6 @@ import com.firebase.ui.auth.FirebaseAuthUIActivityResultContract
 @Composable
 fun ProfileScreen(modifier: Modifier, conspiratorsViewModel: ConspiratorsViewModel, signInClicked: () -> Unit) {
     Column(modifier = modifier) {
-        Button(
-            onClick = {
-                signInClicked()
-            },
-            modifier = Modifier.align(Alignment.End)
-        ) {
-
-        }
         Spacer(modifier = Modifier.height(16.dp))
         Row {
             Column(modifier = Modifier.padding(5.dp)) {

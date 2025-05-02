@@ -20,7 +20,7 @@ activityCompose = "1.10.1"
 composeBom = "2025.03.01"
 navVersion = "2.8.9"
 reflectVersion = "2.0.21"
-coilVersion = "3.0.4"
+coilVersion = "2.4.0"
 cameraX = "1.4.1"
 cameraXAlpha = "1.5.0-alpha06"
 firebaseStorage = "20.2.0"
@@ -55,7 +55,7 @@ androidx-ui-test-junit4 = { group = "androidx.compose.ui", name = "ui-test-junit
 androidx-material3 = { group = "androidx.compose.material3", name = "material3" }
 androidx-navigation = { group = "androidx.navigation", name = "navigation-compose", version.ref = "navVersion" }
 kotlin-reflect = { group = "org.jetbrains.kotlin", name = "kotlin-reflect", version.ref = "reflectVersion" }
-coil-compose = { group = "io.coil-kt.coil3", name = "coil-compose", version.ref = "coilVersion" }
+coil-compose = { group = "io.coil-kt", name = "coil-compose", version.ref = "coilVersion" }
 androidx-room-ktx = { group = "androidx.room", name = "room-ktx", version.ref = "roomVersion" }
 androidx-room-runtime = { group = "androidx.room", name = "room-runtime", version.ref = "roomVersion" }
 androidx-room-compiler = { group = "androidx.room", name = "room-compiler", version.ref = "roomVersion" }

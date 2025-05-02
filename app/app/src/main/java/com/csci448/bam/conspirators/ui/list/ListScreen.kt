@@ -64,7 +64,7 @@ fun ListScreen(modifier: Modifier, conspiratorsViewModel: ConspiratorsViewModel)
 //            items(conspiratorsViewModel.boards) { item ->
             items(conspiratorsViewModel.firebaseBoardValues) { item ->
 //                BoardCard(title = item.name, image = R.drawable.sample_image, onClick = {}, userName = conspiratorsViewModel.getUserNameByUUID(item.userUUID))
-                BoardCard(title = item.name, image = R.drawable.sample_image, onClick = {}, userName = "")
+                BoardCard(title = item.name, imageUrl = "", onClick = {}, userName = "")
             }
         }
     }

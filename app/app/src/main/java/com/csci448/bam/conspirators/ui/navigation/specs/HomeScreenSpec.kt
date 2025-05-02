@@ -43,8 +43,9 @@ object HomeScreenSpec: IScreenSpec {
         cameraExecutor: ExecutorService,
         handleImageCapture: (Uri) -> Unit
     ) {
-        HomeScreen(modifier, conspiratorsViewModel, editClicked = {
+        HomeScreen(modifier, conspiratorsViewModel, editClicked = { it->
             Log.i(LOG_TAG, "going to edit page")
+            conspiratorsViewModel.getBoardFromFBBoardListForEditing(it)
             navController.navigate(BoardScreenSpec.buildRoute(it.id))
         })
     }

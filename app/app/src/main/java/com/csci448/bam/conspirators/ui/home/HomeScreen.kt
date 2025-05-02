@@ -24,6 +24,7 @@ import androidx.compose.ui.text.style.TextAlign
 
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 
 import com.csci448.bam.conspirators.R
 import com.csci448.bam.conspirators.data.firestore.Board
@@ -53,17 +54,23 @@ fun HomeScreen(modifier: Modifier, conspiratorsViewModel: ConspiratorsViewModel,
 
         LazyVerticalGrid(
             modifier = Modifier.weight(1f),
-            columns = GridCells.Fixed(2)
+            columns = GridCells.Fixed(2),
+            userScrollEnabled = !displayExpandedView
         ) {
-            items(conspiratorsViewModel.mBoards.values.toList(), key = { it.id!! }) { item ->
+            items(conspiratorsViewModel.allBoards.value, key = { it.id!! }) { item ->
                 BoardCard(
                     title = item.name,
-                    image = R.drawable.sample_image,
+                    imageUrl = item.thumbnailImageUrl,
                     onClick = {
-                        displayExpandedView = true
                         boardToView = item
+                        if(!displayExpandedView) {
+                            Log.i("home", "Image url is: ${boardToView?.thumbnailImageUrl}")
+                            conspiratorsViewModel.currentThumbnailImage.value = null
+                            conspiratorsViewModel.currentBoardTitle.value = boardToView!!.name
+                            displayExpandedView = true
+                        }
                     },
-                    userName = "sample user"
+                    userName = item.userId
                 )
             }
         }
@@ -79,6 +86,10 @@ fun HomeScreen(modifier: Modifier, conspiratorsViewModel: ConspiratorsViewModel,
                 editClicked = {
                     editClicked(boardToView!!)
                     Log.i("HS", "edit clicked")
+                },
+                viewModel = conspiratorsViewModel,
+                deleteExit = {
+                    displayExpandedView = false
                 }
             )
         }

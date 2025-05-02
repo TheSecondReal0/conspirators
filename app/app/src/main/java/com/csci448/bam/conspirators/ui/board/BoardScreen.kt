@@ -15,12 +15,8 @@ import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.gestures.detectTapGestures
-import androidx.compose.foundation.gestures.detectTransformGestures
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -28,22 +24,18 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material.icons.filled.BorderColor
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Create
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.DeleteForever
-import androidx.compose.material.icons.filled.Done
 import androidx.compose.material.icons.filled.Save
 
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconButtonColors
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -60,6 +52,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.pointer.pointerInput
@@ -74,7 +67,6 @@ import com.csci448.bam.conspirators.R
 import com.csci448.bam.conspirators.data.AddedComponent
 import com.csci448.bam.conspirators.data.AddedComponent.Companion.scale
 import com.csci448.bam.conspirators.data.AddedComponent.Companion.screenSize
-import com.csci448.bam.conspirators.ui.createboard.customDetectTransformGestures
 import com.csci448.bam.conspirators.ui.createboard.customDetectTransformGestures2
 import com.csci448.bam.conspirators.viewmodel.ConspiratorsViewModel
 import java.io.File
@@ -231,6 +223,7 @@ fun BoardScreen(
                                     }
 
                                     if (selectedTool == SelectedTool.EDIT) {
+                                        viewModel.detailComponent.value = item
                                         selectedTool = SelectedTool.EDIT_COMPONENT
                                     }
                                 }
@@ -289,21 +282,19 @@ fun BoardScreen(
                         bitmap.prepareToDraw()
                         if (item.currentlySelected.value) {
                             drawRect(
-                                color = Color.White,
+                                color = Color(207,151,151),
                                 topLeft = calculatedOffset - Offset(6f, 6f),
-                                size = Size(
-                                    bitmap.width + 12f,
-                                    bitmap.height + 12f
-                                )
+                                size = Size(bitmap.width + 12f, bitmap.height + 12f),
+                                style = Stroke(width = 4f)
                             )
-                            drawImage(
-                                bitmap,
-                                calculatedOffset,
-                                colorFilter = ColorFilter.tint(
-                                    Color.Yellow,
-                                    blendMode = BlendMode.Softlight
-                                )
+                            drawImage(bitmap, calculatedOffset)
+                            drawRect(
+                                color = Color.Black.copy(alpha = 0.2f),
+                                topLeft = calculatedOffset,
+                                size = Size(bitmap.width.toFloat(), bitmap.height.toFloat())
                             )
+                            //val testRect = getComponentBounds(item,viewModel.offset.value,scale)
+                            //drawRect(Color.Yellow, testRect.topLeft, size = Size(testRect.width, testRect.height))
                         } else {
                             drawImage(bitmap, calculatedOffset)
                         }
@@ -311,7 +302,7 @@ fun BoardScreen(
                 }
                 // DRAW CONNECTING LINES
 
-                viewModel.conspiracyConnections.forEach { item ->
+                viewModel.currentBoardConnections.forEach { item ->
                     val bitmap1 = item.addedComponent1.getBitmap()
                     val bitmap2 = item.addedComponent1.getBitmap()
                     val calculatedOffsetStart = Offset(
@@ -346,7 +337,7 @@ fun BoardScreen(
             if (viewModel.isEmptyTrashShowing.value && selectedTool == SelectedTool.TRASH) {
                 SimpleTextButton(
                     onClick = {
-                        val iterator1 = viewModel.conspiracyConnections.iterator()
+                        val iterator1 = viewModel.currentBoardConnections.iterator()
                         while (iterator1.hasNext()) {
                             val element = iterator1.next()
                             if (element.addedComponent1.currentlySelected.value || element.addedComponent2.currentlySelected.value) {
@@ -529,14 +520,16 @@ fun BoardScreen(
             }
             // Edit Component Card
             if (selectedTool == SelectedTool.EDIT_COMPONENT) {
-                ComponentEditCard(
-                    modifier = Modifier,
-                    component = viewModel.currentBoardComponents[0],
-                    context = currentContext,
-                    closeClicked = {
-                        selectedTool = SelectedTool.EDIT
-                    }
-                )
+                viewModel.detailComponent.value?.let {
+                    ComponentEditCard(
+                        modifier = Modifier,
+                        component = it,
+                        context = currentContext,
+                        closeClicked = {
+                            selectedTool = SelectedTool.EDIT
+                        }
+                    )
+                }
             }
 
             val animatedAlpha: Float by animateFloatAsState(
@@ -607,19 +600,14 @@ fun ComponentEditCard(
         if (bitmap != null) {
             var desiredHeight = bitmap.height.toFloat()
             var desiredWidth = bitmap.width.toFloat()
+            val shave1: Float = if(screenSize.second*.8 > desiredWidth)
+                ((screenSize.second*.8).toFloat()-desiredHeight) else 0f
+            val shave2: Float = if(screenSize.first*.8 > desiredHeight)
+                    (screenSize.first*.8.toFloat() - desiredWidth) else 0f
 
-            if (desiredHeight > screenSize.second) {
-                val scaler: Float = desiredHeight / (screenSize.second)
-                desiredHeight /= scaler
-                desiredWidth /= scaler
-            }
-            if (desiredWidth > screenSize.first) {
-                val scaler = desiredWidth / (screenSize.first)
-                desiredHeight /= scaler
-                desiredWidth /= scaler
-            }
-            desiredWidth = desiredWidth * scale.floatValue
-            desiredHeight = desiredHeight * scale.floatValue
+            desiredHeight = desiredHeight-shave1-shave2
+            desiredWidth = desiredWidth-shave1-shave2
+
             val bitmap2 = Bitmap.createScaledBitmap(
                 bitmap,
                 desiredWidth.toInt(),
@@ -637,18 +625,19 @@ fun ComponentEditCard(
                 modifier = Modifier.fillMaxWidth(.6f)
             )
              */
-            IconButton(
-                onClick = closeClicked, modifier.size(40.dp).align(Alignment.TopEnd),
-                colors = IconButtonColors(
-                    containerColor = colorResource(R.color.red_700),
-                    contentColor = colorResource(R.color.white),
-                    disabledContainerColor = colorResource(R.color.brown_700),
-                    disabledContentColor = Color.DarkGray)
-            ) {
-                Icon(Icons.Filled.Close, "close")
-            }
+
         if (imageBitmap != null) {
             Image(imageBitmap, component.title.value)
+        }
+        IconButton(
+            onClick = closeClicked, modifier.size(40.dp).padding(10.dp).align(Alignment.TopEnd),
+            colors = IconButtonColors(
+                containerColor = colorResource(R.color.red_700),
+                contentColor = colorResource(R.color.white),
+                disabledContainerColor = colorResource(R.color.brown_700),
+                disabledContentColor = Color.DarkGray)
+        ) {
+            Icon(Icons.Filled.Close, "close")
         }
 
     }
@@ -661,11 +650,14 @@ fun Offset.rotateBy(angle: Float): Offset {
     return Offset((x * cos - y * sin).toFloat(), (x * sin + y * cos).toFloat())
 }
 
+//(item.offset.value.x + viewModel.offset.value.x) * scale,
+//(item.offset.value.y + viewModel.offset.value.y) * scale
+
 private fun getComponentBounds(item: AddedComponent, canvasOffset: Offset, scale: Float): Rect {
     val topLeft = (item.offset.value + canvasOffset) * scale
     val size = Size(
-        item.getBitmap().width.toFloat() * scale,
-        item.getBitmap().height.toFloat() * scale
+        item.getBitmap().width.toFloat(),
+        item.getBitmap().height.toFloat()
     )
     return Rect(topLeft, size)
 }

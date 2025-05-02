@@ -3,8 +3,12 @@ package com.csci448.bam.conspirators.ui.createboard
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.animateColor
+import androidx.compose.animation.core.CubicBezierEasing
 import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.VectorConverter
+import androidx.compose.animation.core.animateValue
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
@@ -42,9 +46,10 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import coil3.compose.rememberAsyncImagePainter
+import coil.compose.rememberAsyncImagePainter
 import com.csci448.bam.conspirators.R
 import com.csci448.bam.conspirators.viewmodel.ConspiratorsViewModel
 
@@ -118,13 +123,24 @@ fun CreateBoardScreen(modifier: Modifier,
     val infiniteTransition = rememberInfiniteTransition(label = "infinite")
 
     val color by infiniteTransition.animateColor(
-        initialValue = Color(80, 30, 30),
+        initialValue = Color(90, 30, 30),
         targetValue = Color(28, 16, 16),
         animationSpec = infiniteRepeatable(
             animation = tween(3000, easing = FastOutSlowInEasing),
             repeatMode = RepeatMode.Reverse
         ),
         label = "color"
+    )
+
+    val border by infiniteTransition.animateValue(
+        initialValue = 3.dp,
+        targetValue = 6.dp,
+        typeConverter = Dp.VectorConverter,
+        animationSpec = infiniteRepeatable(
+            animation = tween(1000, easing = LinearEasing),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "border"
     )
 
     Box(modifier = modifier
@@ -139,9 +155,9 @@ fun CreateBoardScreen(modifier: Modifier,
         Box(modifier = Modifier
             .fillMaxHeight(.8f)
             .fillMaxWidth(.9f)
-            .clip(RoundedCornerShape(20.dp))
+            .clip(RoundedCornerShape(20.dp-border))
             .background(Color(100, 95, 95, 50))
-            .border(4.dp, colorResource(R.color.red_200)),
+            .border(border, colorResource(R.color.red_200)),
             contentAlignment = Alignment.Center
         ) {
             TextField(

@@ -4,6 +4,7 @@ package com.csci448.bam.conspirators.viewmodel
 import android.net.Uri
 import android.util.Log
 import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
@@ -13,11 +14,12 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.csci448.bam.conspirators.DrawingViewModel.SelectedTool
 import com.csci448.bam.conspirators.data.AddedComponent
-import com.csci448.bam.conspirators.data.Board
+import com.csci448.bam.conspirators.data.OldBoard
 import com.csci448.bam.conspirators.data.converters.ConnectionFB
 import com.csci448.bam.conspirators.data.DrawnConnection
 import com.csci448.bam.conspirators.data.User
 import com.csci448.bam.conspirators.data.converters.ComponentFB
+import com.csci448.bam.conspirators.data.firestore.Board
 import com.csci448.bam.conspirators.data.firestore.Image
 import com.csci448.bam.conspirators.data.firestore.StorageService
 import com.csci448.bam.conspirators.data.firestore.StorageServiceImpl
@@ -34,22 +36,57 @@ data class DrawingState(
     val selectedTool: SelectedTool = SelectedTool.EDIT
 )
 
-class ConspiratorsViewModel(val boards: List<Board>, val users: List<User>): ViewModel() {
+class ConspiratorsViewModel(val boards: List<OldBoard>, val users: List<User>): ViewModel() {
 
+    val imageNeedsNewUpload = mutableStateOf(false)
     val database = Firebase.firestore
     val storageService: StorageService = StorageServiceImpl()
 
-    val mBoards = mutableStateMapOf<String, com.csci448.bam.conspirators.data.firestore.Board>()
+    private val mMyBoards = mutableStateListOf<Board>()
+    val myBoards get() = mMyBoards.toList()
 
-    private val mFirebaseBoards = mutableStateMapOf<String, com.csci448.bam.conspirators.data.firestore.Board>()
-    val firebaseBoardValues: List<com.csci448.bam.conspirators.data.firestore.Board> get() = mFirebaseBoards.values.toList()
+    private val mFirebaseBoards = mutableStateMapOf<String, Board>()
+    private val mAllBoards = mutableStateOf<List<Board>>(emptyList())
+    val allBoards: State<List<Board>> get() = mAllBoards
+    val firebaseBoardValues: MutableList<Board> get() = mFirebaseBoards.values.toMutableList()
     init {
         storageService.getAllBoards(
             onSuccess = {
-                it.forEach {id, board -> mFirebaseBoards[id] = board }
+                it.forEach {id, board -> mFirebaseBoards[id] = board
+                    Log.i(LOG_TAG, "retrieved board ${id.toString()}")
+                }
             },
-            onError = {}
+            onError = {
+                Log.i(LOG_TAG, "unable to retrieve boards from firebase")
+            }
         )
+        getUsersBoardsFromAllBoards()
+    }
+
+    fun refreshLocalScreenWithFirBaseData() {
+        storageService.getAllBoards(
+            onSuccess = { boards ->
+                mFirebaseBoards.clear()
+                boards.forEach { id, board ->
+                    mFirebaseBoards[id] = board
+                    Log.i(LOG_TAG, "retrieved board $id")
+                }
+                mAllBoards.value = mFirebaseBoards.values.toList()
+            },
+            onError = {
+                Log.i(LOG_TAG, "unable to retrieve boards from firebase")
+            }
+        )
+    }
+
+    fun getUsersBoardsFromAllBoards() {
+        mMyBoards.clear()
+        mFirebaseBoards.forEach{ b->
+            if (b.value.userId == mThisUser.value?.uid) {
+                Log.i(LOG_TAG, "retrieved user's board ${b.value.id.toString()}")
+                mMyBoards.add(b.value)
+            }
+        }
     }
 
     // current User
@@ -59,7 +96,7 @@ class ConspiratorsViewModel(val boards: List<Board>, val users: List<User>): Vie
         mThisUser.value = fbUser
     }
 
-    private val mBoard: MutableState<com.csci448.bam.conspirators.data.firestore.Board?> = mutableStateOf(null)
+    private val mBoard: MutableState<Board?> = mutableStateOf(null)
     val board get() = mBoard.value
 
     fun loadBoard(id: String) {
@@ -70,7 +107,7 @@ class ConspiratorsViewModel(val boards: List<Board>, val users: List<User>): Vie
         )
     }
 
-    fun saveBoard(board: com.csci448.bam.conspirators.data.firestore.Board, onSuccess: (com.csci448.bam.conspirators.data.firestore.Board) -> Unit, onError: (Throwable) -> Unit) {
+    fun saveBoard(board: Board, onSuccess: (Board) -> Unit, onError: (Throwable) -> Unit) {
         storageService.saveBoard(
             board = board,
             onSuccess = onSuccess,
@@ -78,7 +115,7 @@ class ConspiratorsViewModel(val boards: List<Board>, val users: List<User>): Vie
         )
     }
 
-    fun updateBoard(board: com.csci448.bam.conspirators.data.firestore.Board, onResult: (Throwable?) -> Unit) {
+    fun updateBoard(board: Board, onResult: (Throwable?) -> Unit) {
         storageService.updateBoard(board, onResult = onResult)
     }
 
@@ -95,12 +132,13 @@ class ConspiratorsViewModel(val boards: List<Board>, val users: List<User>): Vie
     val showListComponentTree = mutableStateOf(false)
     val selectedTool = mutableStateOf(SelectedTool.EDIT)
     private val mConspiracyConnections = mutableListOf<DrawnConnection>()
-    val conspiracyConnections = mConspiracyConnections
+    val currentBoardConnections = mConspiracyConnections
     val isSaveLoading = mutableStateOf(false)
+    val detailComponent = mutableStateOf<AddedComponent?>(null)
 
     // related to board list
     private val mBoardListState = MutableStateFlow(boards)
-    val boardListState: StateFlow<List<Board>>
+    val boardListState: StateFlow<List<OldBoard>>
         get() = mBoardListState.asStateFlow()
 
     // related to user lists
@@ -109,24 +147,14 @@ class ConspiratorsViewModel(val boards: List<Board>, val users: List<User>): Vie
         get() = mUserListState.asStateFlow()
     val currentUser = mutableStateOf(users[0])
 
-    fun getBoardsOfUser(userUUID: UUID): List<Board> {
-        val boards: MutableList<Board> = mutableListOf()
+    fun getBoardsOfUser(userUUID: UUID): List<OldBoard> {
+        val boards: MutableList<OldBoard> = mutableListOf()
         for (board in boardListState.value) {
             if (board.userUUID == userUUID) {
                 boards.add(board)
             }
         }
         return boards.toList()
-    }
-
-    fun getUserNameByUUID(userUUID: UUID): String {
-        var username: String = "Unknown"
-        for (user in userListState.value) {
-            if (user.userId == userUUID) {
-                username = user.userName
-            }
-        }
-        return username
     }
 
     // board editing functions
@@ -157,17 +185,49 @@ class ConspiratorsViewModel(val boards: List<Board>, val users: List<User>): Vie
     val currentBoardTitle = mutableStateOf<String>("")
     val currentThumbnailImage = mutableStateOf<Uri?>(null)
     fun createNewBoard() {
-        // add board to database
-        mBoard.value = com.csci448.bam.conspirators.data.firestore.Board(
-            id = null,
-            userId = mThisUser.value?.uid.toString(),
-            name = currentBoardTitle.value,
-        )
-        Log.i(LOG_TAG, "board made for with UUID: ${mBoard.value!!.id.toString()} by ")
-        //TODO I assume it automatically gets detected by FireStore list? but if not, update list
+        // add thumbnail image to database but just set current board to local mBoard
+        if (currentThumbnailImage.value != null) {
+            uploadImage(
+                imageUri = currentThumbnailImage.value!!,
+                fileName = "Thumbnails",
+                onSuccess = { it->
+                    Log.i(LOG_TAG, "img thumbnail ${it.toString()} uploaded")
+                    mBoard.value = Board(
+                        id = null,
+                        userId = mThisUser.value?.uid.toString(),
+                        name = currentBoardTitle.value,
+                        thumbnailImageUrl = it
+                    )
+                    saveBoard(
+                        mBoard.value!!, onSuccess = { b ->
+                            mBoard.value = b
+                        },
+                        onError = {})
+                },
+                onError = {
+                    Log.i(LOG_TAG, "img thumbnail failed upload")
+                }
+            )
+        }
+        else {
+            Log.i(LOG_TAG, "no thumbnail but new board")
+            mBoard.value = Board(
+                id = null,
+                userId = mThisUser.value?.uid.toString(),
+                name = currentBoardTitle.value,
+                thumbnailImageUrl = null
+            )
+            saveBoard(
+                mBoard.value!!, onSuccess = { b ->
+                mBoard.value = b
+
+            },
+                onError = {})
+        }
+
     }
 
-    // update the current board that we're on
+    // update the current board that we're on, this should only be used with save function since it does not edit name or image
     fun saveCurrentBoardConfigAndUpload(){
         mergeNewImagesIntoBoard()
         mergeNewConnectionsIntoBoard()
@@ -206,7 +266,6 @@ class ConspiratorsViewModel(val boards: List<Board>, val users: List<User>): Vie
                     Log.d(LOG_TAG, e.printStackTrace().toString())
                 }
             )
-
         } else {
             storageService.updateBoard(boardToSave) { error ->
                 if (error == null) {
@@ -220,7 +279,6 @@ class ConspiratorsViewModel(val boards: List<Board>, val users: List<User>): Vie
         }
         isSaveLoading.value = false
     }
-    val uploadedUrls = mutableMapOf<String, String>() // componentId to downloadUrl
 
     private fun mergeNewImagesIntoBoard() {
         val board = mBoard.value ?: return
@@ -248,25 +306,40 @@ class ConspiratorsViewModel(val boards: List<Board>, val users: List<User>): Vie
         )
     }
 
-    fun pullCurrentBoardDataFromFB() {
+    // sets the selected board up for editing/viewing
+    fun getBoardFromFBBoardListForEditing(editBoard: Board) {
+        mBoard.value = editBoard
+        currentBoardComponents.clear()
+        currentBoardConnections.clear()
+        pullCurrentBoardDataFromFBBoard()
+    }
+
+    private fun pullCurrentBoardDataFromFBBoard() {
+        // pull in images and swap them to editable components if not already in editable connection list
         mBoard.value?.images?.forEach{ img ->
+            val newComp = AddedComponent(
+                uri = null,
+                context = null,
+                offset = mutableStateOf(Offset(x = img.value.x.toFloat(), y = img.value.y.toFloat())),
+                title = mutableStateOf(""),
+                url = img.value.imageUrl
+            )
+            if (currentBoardComponents.find { return@find(it.id == newComp.id)} == null)
             currentBoardComponents.add(
-                AddedComponent(
-                    uri = null,
-                    context = null,
-                    offset = mutableStateOf(Offset(x = img.value.x.toFloat(), y = img.value.y.toFloat())),
-                    title = mutableStateOf(""),
-                    url = img.value.imageUrl
-                )
+                newComp
             )
         }
-//TODO finish this and above, make sure to check the values arent already added to our list
+        // pull in FB connections and swap them to editable connections
         mBoard.value?.connections?.forEach { conc ->
             val newConc = conc?.toAddedConnection()
-            if (newConc != null && conspiracyConnections.find { drawnConnection -> drawnConnection.addedComponent2.id == newConc.addedComponent1.id }) {
-
+            // make sure newConc isnt null and that it does not already exist in the list
+            if (newConc != null && currentBoardConnections.find { return@find (it.addedComponent2.id == newConc.addedComponent1.id) } == null
+                && currentBoardConnections.find { return@find (it.addedComponent2.id == newConc.addedComponent1.id) } == null) {
+                currentBoardConnections.add(newConc)
             }
         }
+        currentBoardTitle.value = mBoard.value?.name ?: ""
+
     }
 
     private fun ComponentFB.toAddedComp() : AddedComponent {
@@ -295,7 +368,7 @@ class ConspiratorsViewModel(val boards: List<Board>, val users: List<User>): Vie
     private fun mergeNewConnectionsIntoBoard() {
         val board = mBoard.value ?: return
         val currentConnectionsFB = mBoard.value!!.connections.toMutableList()
-        for (component in conspiracyConnections) {
+        for (component in currentBoardConnections) {
             val tryComp = component.toFirebaseConnection()
             if (tryComp !in currentConnectionsFB) {
                 if (tryComp != null) {
@@ -334,13 +407,13 @@ class ConspiratorsViewModel(val boards: List<Board>, val users: List<User>): Vie
         viewModelScope.launch() {
             storageService.addListenerForBoardsWithUserId(
                 id,
-                {wasDocumentDeleted: Boolean, board: com.csci448.bam.conspirators.data.firestore.Board -> onBoardsWithUserIdDocumentEvent(wasDocumentDeleted, board)},
+                {wasDocumentDeleted: Boolean, board: Board -> onBoardsWithUserIdDocumentEvent(wasDocumentDeleted, board)},
                 {})
         }
     }
 
-    fun onBoardsWithUserIdDocumentEvent(wasDocumentDeleted: Boolean, board: com.csci448.bam.conspirators.data.firestore.Board) {
-        if (wasDocumentDeleted) mBoards.remove(board.id!!) else mBoards[board.id!!] = board
+    fun onBoardsWithUserIdDocumentEvent(wasDocumentDeleted: Boolean, board: Board) {
+        if (wasDocumentDeleted) mFirebaseBoards.remove(board.id!!) else mFirebaseBoards[board.id!!] = board
     }
 
     fun removeListenerForBoardsWithUserId() {
@@ -355,6 +428,47 @@ class ConspiratorsViewModel(val boards: List<Board>, val users: List<User>): Vie
             fileName = fileName,
             onSuccess = onSuccess,
             onError = onError)
+    }
+
+    fun updateBoardNameAndImageToFB(boardToView: Board) {
+
+        if (currentThumbnailImage.value != null && boardToView.id != null && currentThumbnailImage.value !=null && imageNeedsNewUpload.value) {
+            imageNeedsNewUpload.value = false
+            uploadImage(
+                imageUri = currentThumbnailImage.value!!,
+                fileName = boardToView.id ?: "ERROR",
+                onSuccess = { it->
+                    Log.i(LOG_TAG, "img thumbnail ${it.toString()} uploaded")
+                    mBoard.value = boardToView.copy(
+                        name = currentBoardTitle.value,
+                        thumbnailImageUrl = it
+                    )
+                    updateBoard(
+                        mBoard.value!!,
+                        onResult = {
+                            Log.i(LOG_TAG, "Updated board to new title and image")
+                        }
+                    )
+                },
+                onError = {
+                    Log.i(LOG_TAG, "img thumbnail failed upload")
+                }
+            )
+        }
+        else if(boardToView.id != null) {
+            Log.i(LOG_TAG, "no thumbnail but new update")
+            mBoard.value = boardToView.copy(
+                name = currentBoardTitle.value,
+                thumbnailImageUrl = null
+            )
+            updateBoard(
+                mBoard.value!!,
+                onResult = {
+                    Log.i(LOG_TAG, "Updated board to new title and image")
+                }
+            )
+        }
+        refreshLocalScreenWithFirBaseData()
     }
 
 

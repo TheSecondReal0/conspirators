@@ -56,7 +56,7 @@ class StorageServiceImpl : StorageService {
             Log.d(LOG_TAG, "Successfully retrieved board $boardId: ${it.data}")
             val board: Board = docToBoard(it)
             onSuccess(board)
-        } .addOnFailureListener {
+        }.addOnFailureListener {
             Log.e(LOG_TAG, "getBoard failed with error $it")
             onError(it)
         }
@@ -104,30 +104,34 @@ class StorageServiceImpl : StorageService {
     }
 
 
-    override fun getAllBoards(onSuccess: (Map<String, Board>) -> Unit, onError: (Throwable) -> Unit) {
+    override fun getAllBoards(
+        onSuccess: (Map<String, Board>) -> Unit,
+        onError: (Throwable) -> Unit
+    ) {
         val docRef = Firebase.firestore.collection("boards")
         docRef.get().addOnSuccessListener {
             Log.d(LOG_TAG, "Successfully retrieved all boards: $it")
-            val boards: Map<String, Board> = it.documents.associate { doc -> Pair(doc.id, docToBoard(doc)) }
+            val boards: Map<String, Board> =
+                it.documents.associate { doc -> Pair(doc.id, docToBoard(doc)) }
             onSuccess(boards)
-        } .addOnFailureListener {
+        }.addOnFailureListener {
             Log.e(LOG_TAG, "getAllBoards failed with error $it")
             onError(it)
         }
     }
 
-//TODO uncomment this after nuking old database
-/*
-private fun docToBoard(doc: DocumentSnapshot): Board {
-    var obj: Board? = doc.toObject(Board::class.java)
-    if (obj == null) return Board()
-    obj = obj!!.copy(
-        id = doc.id
-    )
-    return obj
-}
+    //TODO uncomment this after nuking old database
+    /*
+    private fun docToBoard(doc: DocumentSnapshot): Board {
+        var obj: Board? = doc.toObject(Board::class.java)
+        if (obj == null) return Board()
+        obj = obj!!.copy(
+            id = doc.id
+        )
+        return obj
+    }
 
- */
+     */
 //TODO delete this after the nuke
     private fun docToBoard(doc: DocumentSnapshot): Board {
         val id = doc.id
@@ -165,35 +169,42 @@ private fun docToBoard(doc: DocumentSnapshot): Board {
 
             else -> emptyList()
         }
+        val thumbnailImageUrl = doc.getString("thumbnailImageUrl") ?: ""
         return Board(
             id = id,
             userId = userId,
             name = name,
             images = images,
-            connections = connections
+            connections = connections,
+            thumbnailImageUrl = thumbnailImageUrl
         )
     }
 
-override fun uploadImage(imageUri: Uri, fileName: String, onSuccess: (String) -> Unit, onError: (Throwable) -> Unit) {
-    val storageRef = FirebaseStorage.getInstance()
-        .reference
-        .child(fileName)
+    override fun uploadImage(
+        imageUri: Uri,
+        fileName: String,
+        onSuccess: (String) -> Unit,
+        onError: (Throwable) -> Unit
+    ) {
+        val storageRef = FirebaseStorage.getInstance()
+            .reference
+            .child(fileName)
 
-    storageRef.putFile(imageUri)
-        .addOnProgressListener { snap ->
-            val percent = 100.0 * snap.bytesTransferred / snap.totalByteCount
-            Log.d(LOG_TAG, "Uploading: ${percent.toInt()}%")
-        }
-        .addOnSuccessListener {
-            // 3) Once the file is uploaded, get its public download URL
-            storageRef.downloadUrl.addOnSuccessListener { downloadUri ->
-                Log.d(LOG_TAG, "Retrieved download url: $downloadUri")
-                onSuccess(downloadUri.toString())
+        storageRef.putFile(imageUri)
+            .addOnProgressListener { snap ->
+                val percent = 100.0 * snap.bytesTransferred / snap.totalByteCount
+                Log.d(LOG_TAG, "Uploading: ${percent.toInt()}%")
             }
-        }
-        .addOnFailureListener { e ->
-            Log.e(LOG_TAG, "Upload failed", e)
-            onError(e)
-        }
-}
+            .addOnSuccessListener {
+                // 3) Once the file is uploaded, get its public download URL
+                storageRef.downloadUrl.addOnSuccessListener { downloadUri ->
+                    Log.d(LOG_TAG, "Retrieved download url: $downloadUri")
+                    onSuccess(downloadUri.toString())
+                }
+            }
+            .addOnFailureListener { e ->
+                Log.e(LOG_TAG, "Upload failed", e)
+                onError(e)
+            }
+    }
 }

@@ -20,12 +20,12 @@ fun PostGrid(conspiratorsViewModel: ConspiratorsViewModel) {
         columns = GridCells.Fixed(2)
     )
     {
-        items(conspiratorsViewModel.getBoardsOfUser(conspiratorsViewModel.currentUser.value.userId)) { item ->
+        items(conspiratorsViewModel.myBoards) { item ->
             BoardCard(
                 title = item.name,
-                image = R.drawable.sample_image,
+                imageUrl = item.thumbnailImageUrl,
                 onClick = {},
-                userName = conspiratorsViewModel.getUserNameByUUID(item.userUUID)
+                userName = conspiratorsViewModel.thisUser?.displayName ?: ""
             )
         }
     }

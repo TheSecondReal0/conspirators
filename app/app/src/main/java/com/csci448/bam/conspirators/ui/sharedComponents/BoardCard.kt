@@ -27,17 +27,19 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import coil.compose.AsyncImage
+import coil.compose.AsyncImagePainter
 import com.csci448.bam.conspirators.R
 import java.util.UUID
 
 @Composable
-fun BoardCard(title: String, image: Int? = null, onClick: () -> Unit, userName: String) {
+fun BoardCard(title: String, imageUrl: String? = null, onClick: () -> Unit, userName: String) {
     val cardModifier = Modifier
         .size(200.dp)
         .clickable(onClick = onClick)
         .padding(4.dp)
         .clip(RoundedCornerShape(10.dp))
-    if (image != null) {
+    if (imageUrl == null || imageUrl == "") {
         Box(modifier = cardModifier,
             contentAlignment = Alignment.Center)
         {
@@ -61,15 +63,27 @@ fun BoardCard(title: String, image: Int? = null, onClick: () -> Unit, userName: 
         }
     }
     else {
-        Box(modifier = cardModifier.background(Color.LightGray),contentAlignment = Alignment.Center) {
-            Text(title, modifier = Modifier.padding(5.dp),
-                textAlign = TextAlign.Center,
-                overflow = TextOverflow.Ellipsis)
+        Box(modifier = cardModifier,
+            contentAlignment = Alignment.Center)
+        {
+            AsyncImage(model = imageUrl, contentDescription = null,
+                Modifier.fillMaxSize().align(Alignment.Center),
+                contentScale = ContentScale.Crop,
+                placeholder = painterResource(R.drawable.john)
+            )
+            Row(Modifier.clip(RoundedCornerShape(topEnd = 20.dp)).background(Color(red = 255, blue = 255, green = 255, alpha = 230))
+                .align(Alignment.BottomStart)) {
+                Column {
+                    Text(title,modifier = Modifier.padding(top = 10.dp, start = 10.dp, end = 10.dp),
+                        textAlign = TextAlign.Start,
+                        overflow = TextOverflow.Ellipsis)
 
-            Text(text = userName, modifier = Modifier.padding(start = 15.dp, bottom = 4.dp).align(Alignment.BottomStart),
-                textAlign = TextAlign.Center,
-                overflow = TextOverflow.Ellipsis,
-                fontSize = 10.sp)
+                    Text(text = userName, modifier = Modifier.padding(start = 15.dp, bottom = 4.dp),
+                        textAlign = TextAlign.Center,
+                        overflow = TextOverflow.Ellipsis,
+                        fontSize = 10.sp)
+                }
+            }
         }
     }
 
@@ -80,6 +94,6 @@ fun BoardCard(title: String, image: Int? = null, onClick: () -> Unit, userName: 
 fun PreviewBoardCard() {
     Row(modifier = Modifier.fillMaxSize()) {
         BoardCard("Avocado", onClick = {}, userName = "poggers")
-        BoardCard("Avocado", onClick = {}, image = R.drawable.sample_image, userName = "harry")
+        BoardCard("Avocado", onClick = {}, imageUrl = null, userName = "harry")
     }
 }

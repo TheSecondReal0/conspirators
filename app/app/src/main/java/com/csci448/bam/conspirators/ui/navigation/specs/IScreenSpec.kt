@@ -22,11 +22,13 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NamedNavArgument
 import androidx.navigation.NavBackStackEntry
 import androidx.navigation.NavHostController
 import com.csci448.bam.conspirators.viewmodel.ConspiratorsViewModel
 import java.io.File
+import java.util.UUID
 import java.util.concurrent.ExecutorService
 
 sealed interface IScreenSpec {
@@ -70,7 +72,6 @@ sealed interface IScreenSpec {
     @Composable
     fun TopAppBarContent(vm: ConspiratorsViewModel, navController: NavHostController,
                          navBackStackEntry: NavBackStackEntry?, context: Context) {
-
         Row (Modifier.padding(5.dp).fillMaxHeight(0.1f).fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
             TopAppBarActions(vm, navController, navBackStackEntry, context)
         }
@@ -83,13 +84,18 @@ sealed interface IScreenSpec {
         IconButton(onClick = {navController.navigate(ListScreenSpec.route)}) {
             Icon(Icons.Filled.Search, contentDescription = "Explore")
         }
-        IconButton(onClick = { navController.navigate(BoardCreateScreenSpec.route) }) {
+        IconButton(onClick = {
+            vm.currentThumbnailImage.value = null
+            vm.currentBoardTitle.value = "My Board"
+            navController.navigate(BoardCreateScreenSpec.route) }) {
             Icon(Icons.Filled.AddCircle, contentDescription = "New Board")
         }
         IconButton(onClick = { navController.navigate(HomeScreenSpec.route)}) {
+            vm.refreshLocalScreenWithFirBaseData()
             Icon(Icons.Filled.Home, contentDescription = "Home")
         }
         IconButton(onClick = {navController.navigate(ProfileScreenSpec.route)}) {
+            vm.refreshLocalScreenWithFirBaseData()
             Icon(Icons.Filled.AccountCircle, contentDescription = "Account")
         }
         // TODO delete this
