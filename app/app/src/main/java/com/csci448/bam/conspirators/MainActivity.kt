@@ -141,42 +141,15 @@ class MainActivity : ComponentActivity() {
                             navController,
                             conspiratorsViewModel,
                             context,
-                            shouldShowCamera,
-                            outputDirectory,
-                            cameraExecutor,
-                            ) {
-                            uri: Uri -> handleImageCapture(
-                            uri,
-                            currentContext = context
-                        )
-                        }
+                            outputDirectory = getOutputDirectory()
+                            )
 
                     }
                 }
             }
         }
+
         requestCameraPermission()
-        outputDirectory = getOutputDirectory()
-        cameraExecutor = Executors.newSingleThreadExecutor()
-    }
-
-
-
-
-    public override fun onStart() {
-        super.onStart()
-        // Check if user is signed in (non-null) and update UI accordingly.
-        /*
-        val currentUser = auth.currentUser
-        if (currentUser != null) {
-            conspiratorsViewModel.setUser(currentUser)
-            //reload() this will reload the screen for the current user
-        }
-        else {
-            // now we need to handle if they got logged out
-        }
-
-         */
     }
 
     private val requestPermissionLauncher = registerForActivityResult(
@@ -207,52 +180,34 @@ class MainActivity : ComponentActivity() {
         }
     }
 
-    private lateinit var outputDirectory: File
-    private lateinit var cameraExecutor: ExecutorService
-    private var shouldShowCamera: MutableState<Boolean> = mutableStateOf(false)
-    private lateinit var photoUri: Uri
-    private var shouldShowPhoto: MutableState<Boolean> = mutableStateOf(false)
 
-    fun handleImageCapture(uri: Uri, currentContext: Context) {
-        Log.i("kilo", "Image captured: $uri")
-        shouldShowCamera.value = false
-        photoUri = uri
-        shouldShowPhoto.value = true
-        conspiratorsViewModel.uploadImage(
-            imageUri = uri,
-            fileName = "photo",
-            onSuccess = {url ->
-                var component =
-                    AddedComponent(
-                        uri = photoUri,
-                        url = url,
-                        context = currentContext,
-                        offset = mutableStateOf(-conspiratorsViewModel.offset.value + Offset(currentContext.resources.displayMetrics.widthPixels.toFloat()/2f,
-                            currentContext.resources.displayMetrics.heightPixels.toFloat()/2f)
-                        )
-                    )
-                conspiratorsViewModel.currentBoardComponents.add(component)
-                conspiratorsViewModel.viewModelScope.launch(Dispatchers.IO) {
-                    component.retrieveBitmap()
-                }
-            },
-            onError = {e ->
-                Log.d(LOG_TAG, "Failed to upload picture taken from camera")
-            }
-        )
+
+    public override fun onStart() {
+        super.onStart()
+        // Check if user is signed in (non-null) and update UI accordingly.
+        /*
+        val currentUser = auth.currentUser
+        if (currentUser != null) {
+            conspiratorsViewModel.setUser(currentUser)
+            //reload() this will reload the screen for the current user
+        }
+        else {
+            // now we need to handle if they got logged out
+        }
+
+         */
     }
 
-    private fun getOutputDirectory(): File {
+    override fun onDestroy() {
+        super.onDestroy()
+    }
+
+    fun getOutputDirectory(): File {
         val mediaDir = externalMediaDirs.firstOrNull()?.let {
             File(it, resources.getString(R.string.app_name)).apply { mkdirs() }
         }
 
         return if (mediaDir != null && mediaDir.exists()) mediaDir else filesDir
-    }
-
-    override fun onDestroy() {
-        super.onDestroy()
-        cameraExecutor.shutdown()
     }
 }
 

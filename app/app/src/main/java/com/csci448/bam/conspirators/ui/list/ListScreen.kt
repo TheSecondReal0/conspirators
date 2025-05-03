@@ -61,7 +61,19 @@ fun ListScreen(
             shadowElevation = 2.dp,
             windowInsets = SearchBarDefaults.windowInsets
         ) {
-            Text(text = "YOU SEARCHED!!! YAYYYYY")
+            LazyVerticalGrid (modifier = Modifier
+                .fillMaxSize()
+                .padding(horizontal = 5.dp, vertical = 3.dp), columns = GridCells.Fixed(2))
+            {
+                items(conspiratorsViewModel.searchBoards(search), key = { it.id!! }) { item ->
+                    BoardCard(
+                        title = item.name,
+                        imageUrl = item.thumbnailImageUrl,
+                        onClick = { onView(item) },
+                        userName = item.userName
+                    )
+                }
+            }
         }
         LazyVerticalGrid (modifier = Modifier
             .fillMaxSize()
