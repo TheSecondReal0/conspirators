@@ -42,15 +42,16 @@ fun HomeScreen(modifier: Modifier, conspiratorsViewModel: ConspiratorsViewModel,
     }
 
     Column(modifier = Modifier.fillMaxSize()) {
-        Text(
-            text = "My Boards",
-            fontSize = 24.sp,
+        conspiratorsViewModel.thisUser?.displayName?.let { Text(
+            text = "$it's Boards",
+            fontSize = 20.sp,
             fontWeight = FontWeight.Bold,
             modifier = Modifier
                 .align(Alignment.CenterHorizontally)
                 .padding(vertical = 16.dp),
             textAlign = TextAlign.Left
-        )
+        ) }
+
 
         LazyVerticalGrid(
             modifier = Modifier.weight(1f),

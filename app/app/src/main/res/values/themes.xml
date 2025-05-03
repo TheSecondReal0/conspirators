@@ -1,5 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <style name="Theme.Conspirators" parent="android:Theme.Material.Light.NoActionBar" />
+    <style name="Theme.Conspirators" parent="Theme.MaterialComponents.DayNight" >
+        <item name="colorPrimary">#6B2F2B</item> <!-- red_200 -->
+        <item name="colorPrimaryVariant">#7A140D</item> <!-- red_700 -->
+        <item name="colorSecondary">#8A6B6B</item> <!-- brown_200 -->
+        <item name="colorSecondaryVariant">#644A41</item> <!-- brown_500 -->
+        <item name="android:colorBackground">#FFFFFF</item>
+        <item name="android:textColorPrimary">#ffffff</item>
+        <item name="android:textColorSecondary">#858585</item>
+        <item name="android:statusBarColor">@color/red_700</item>
+    </style>
 </resources>
