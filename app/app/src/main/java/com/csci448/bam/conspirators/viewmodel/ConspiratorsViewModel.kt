@@ -199,7 +199,7 @@ class ConspiratorsViewModel(val boards: List<OldBoard>, val users: List<User>): 
     // create new board page
     val currentBoardTitle = mutableStateOf<String>("")
     val currentThumbnailImage = mutableStateOf<Uri?>(null)
-    fun createNewBoard() {
+    fun createNewBoard(onSuccess: (Board) -> Unit, onError: (Throwable) -> Unit = {}) {
         // add thumbnail image to database but just set current board to local mBoard
         if (currentThumbnailImage.value != null) {
             uploadImage(
@@ -211,11 +211,13 @@ class ConspiratorsViewModel(val boards: List<OldBoard>, val users: List<User>): 
                         id = null,
                         userId = mThisUser.value?.uid.toString(),
                         name = currentBoardTitle.value,
+                        userName = if (thisUser?.displayName != null) thisUser!!.displayName!! else "User",
                         thumbnailImageUrl = it
                     )
                     saveBoard(
                         mBoard.value!!, onSuccess = { b ->
                             mBoard.value = b
+                            onSuccess(b)
                         },
                         onError = {Log.i(LOG_TAG, "FAIL1")})
                 },
@@ -230,13 +232,15 @@ class ConspiratorsViewModel(val boards: List<OldBoard>, val users: List<User>): 
                 id = null,
                 userId = mThisUser.value?.uid.toString(),
                 name = currentBoardTitle.value,
+                userName = if (thisUser?.displayName != null) thisUser!!.displayName!! else "User",
                 thumbnailImageUrl = null
             )
             saveBoard(
                 mBoard.value!!, onSuccess = { b ->
-                mBoard.value = b;
+                    mBoard.value = b
                     Log.i(LOG_TAG, "${b.id} AAAAA")
-            },
+                    onSuccess(b)
+                    },
                 onError = {Log.i(LOG_TAG, "FAIL2")})
         }
 

@@ -222,8 +222,10 @@ fun CreateBoardScreen(modifier: Modifier,
             Row(horizontalArrangement = Arrangement.SpaceEvenly, modifier = Modifier.fillMaxWidth().padding(20.dp).align(Alignment.BottomCenter)) {
                 Button(
                     onClick = {
-                        viewModel.createNewBoard()
-                        navigateToBoardCreation(viewModel.board!!)
+                        viewModel.createNewBoard(onSuccess = {board ->
+                            navigateToBoardCreation(board)
+                        })
+
                               },
                     modifier = Modifier,
                     enabled = viewModel.currentBoardTitle.value.isNotEmpty(),
