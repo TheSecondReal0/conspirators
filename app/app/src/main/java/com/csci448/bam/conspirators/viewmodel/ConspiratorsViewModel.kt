@@ -251,7 +251,8 @@ class ConspiratorsViewModel(val boards: List<OldBoard>, val users: List<User>): 
 //                }
 //            }
 //        }
-        val board = mBoard.value ?: return
+        var board = mBoard.value ?: return
+        board = board.copy(userName = thisUser?.displayName ?: "Guest")
 
         val boardToSave = board
 //            .copy(
@@ -384,7 +385,7 @@ class ConspiratorsViewModel(val boards: List<OldBoard>, val users: List<User>): 
         val currentConnectionsFB = mBoard.value!!.connections.toMutableList()
         currentConnectionsFB.clear()
         for (component in currentBoardConnections) {
-            val tryComp = component.toFirebaseConnection()
+            val tryComp = component.toFirebaseConnection()!!
             if (tryComp !in currentConnectionsFB) {
                 if (tryComp != null) {
                     currentConnectionsFB.add(tryComp)

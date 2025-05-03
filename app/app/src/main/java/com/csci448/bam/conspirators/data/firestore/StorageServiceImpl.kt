@@ -121,66 +121,64 @@ class StorageServiceImpl : StorageService {
     }
 
     //TODO uncomment this after nuking old database
-    /*
     private fun docToBoard(doc: DocumentSnapshot): Board {
         var obj: Board? = doc.toObject(Board::class.java)
         if (obj == null) return Board()
-        obj = obj!!.copy(
+        obj = obj.copy(
             id = doc.id
         )
         return obj
     }
 
-     */
 //TODO delete this after the nuke
-    private fun docToBoard(doc: DocumentSnapshot): Board {
-        val id = doc.id
-        val userId = doc.getString("userId") ?: ""
-        val name = doc.getString("name") ?: ""
-
-        val imageMap = doc.get("images") as? Map<String, Map<String, Any>> ?: emptyMap()
-        val images = imageMap.mapValues { (_, value) ->
-            Image(
-                imageUrl = value["imageUrl"] as? String ?: "",
-                x = (value["x"] as? Number)?.toDouble() ?: 0.0,
-                y = (value["y"] as? Number)?.toDouble() ?: 0.0
-            )
-        }
-
-        val connectionsRaw = doc.get("connections")
-        val connections = when (connectionsRaw) {
-            is List<*> -> connectionsRaw.mapNotNull { item ->
-                val map = item as? Map<*, *> ?: return@mapNotNull null
-                ConnectionFB(
-                    componentId1 = map["componentId1"] as? String ?: "",
-                    componentId2 = map["componentId2"] as? String ?: "",
-                    label = map["label"] as? String ?: ""
-                )
-            }
-
-            is Map<*, *> -> {
-                // handle old map format (e.g., {"id1": "id2"})
-                connectionsRaw.mapNotNull { (k, v) ->
-                    if (k is String && v is String) {
-                        ConnectionFB(k, v)
-                    } else null
-                }
-            }
-
-            else -> emptyList()
-        }
-        val thumbnailImageUrl = doc.getString("thumbnailImageUrl") ?: ""
-        val userName = doc.getString("userName") ?: ""
-        return Board(
-            id = id,
-            userId = userId,
-            userName = userName,
-            name = name,
-            images = images,
-            connections = connections,
-            thumbnailImageUrl = thumbnailImageUrl
-        )
-    }
+//    private fun docToBoard(doc: DocumentSnapshot): Board {
+//        val id = doc.id
+//        val userId = doc.getString("userId") ?: ""
+//        val name = doc.getString("name") ?: ""
+//
+//        val imageMap = doc.get("images") as? Map<String, Map<String, Any>> ?: emptyMap()
+//        val images = imageMap.mapValues { (_, value) ->
+//            Image(
+//                imageUrl = value["imageUrl"] as? String ?: "",
+//                x = (value["x"] as? Number)?.toDouble() ?: 0.0,
+//                y = (value["y"] as? Number)?.toDouble() ?: 0.0
+//            )
+//        }
+//
+//        val connectionsRaw = doc.get("connections")
+//        val connections = when (connectionsRaw) {
+//            is List<*> -> connectionsRaw.mapNotNull { item ->
+//                val map = item as? Map<*, *> ?: return@mapNotNull null
+//                ConnectionFB(
+//                    componentId1 = map["componentId1"] as? String ?: "",
+//                    componentId2 = map["componentId2"] as? String ?: "",
+//                    label = map["label"] as? String ?: ""
+//                )
+//            }
+//
+//            is Map<*, *> -> {
+//                // handle old map format (e.g., {"id1": "id2"})
+//                connectionsRaw.mapNotNull { (k, v) ->
+//                    if (k is String && v is String) {
+//                        ConnectionFB(k, v)
+//                    } else null
+//                }
+//            }
+//
+//            else -> emptyList()
+//        }
+//        val thumbnailImageUrl = doc.getString("thumbnailImageUrl") ?: ""
+//        val userName = doc.getString("userName") ?: ""
+//        return Board(
+//            id = id,
+//            userId = userId,
+//            userName = userName,
+//            name = name,
+//            images = images,
+//            connections = connections,
+//            thumbnailImageUrl = thumbnailImageUrl
+//        )
+//    }
 
     override fun uploadImage(
         imageUri: Uri,
