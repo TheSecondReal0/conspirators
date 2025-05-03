@@ -96,9 +96,9 @@ sealed interface IScreenSpec {
             vm.refreshLocalScreenWithFirBaseData()
             Icon(Icons.Filled.Home, contentDescription = "Home")
         }
-        // TODO delete this
-        IconButton(onClick = { navController.navigate(WeirdAsaTestScreenSpec.route) }) {
-            Icon(Icons.Filled.Warning, contentDescription = "TEST BUTTON")
-        }
+//        // TODO delete this
+//        IconButton(onClick = { navController.navigate(WeirdAsaTestScreenSpec.route) }) {
+//            Icon(Icons.Filled.Warning, contentDescription = "TEST BUTTON")
+//        }
     }
 }
