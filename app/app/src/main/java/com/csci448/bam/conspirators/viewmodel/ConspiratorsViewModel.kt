@@ -346,10 +346,11 @@ class ConspiratorsViewModel(val boards: List<OldBoard>, val users: List<User>): 
         }
         // pull in FB connections and swap them to editable connections
         mBoard.value?.connections?.forEach { conc ->
-            val newConc = conc?.toAddedConnection()
+            val newConc = conc.toAddedConnection()
             // make sure newConc isnt null and that it does not already exist in the list
-            if (newConc != null && currentBoardConnections.find { return@find (it.addedComponent2.id == newConc.addedComponent1.id) } == null
-                && currentBoardConnections.find { return@find (it.addedComponent2.id == newConc.addedComponent1.id) } == null) {
+//            if (newConc != null && currentBoardConnections.find { return@find (it.addedComponent1.id == newConc.addedComponent1.id) } == null
+//                && currentBoardConnections.find { return@find (it.addedComponent2.id == newConc.addedComponent2.id) } == null) {
+            if (newConc != null) {
                 currentBoardConnections.add(newConc)
             }
         }

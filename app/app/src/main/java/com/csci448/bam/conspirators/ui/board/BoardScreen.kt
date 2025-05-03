@@ -322,10 +322,12 @@ fun BoardScreen(
                 // DRAW CONNECTING LINES
 
                 viewModel.currentBoardConnections.forEach { item ->
+                    Log.d(LOG_TAG, "Drawing connection $item")
                     val bitmap1 = item.addedComponent1.getBitmap()
-                    val bitmap2 = item.addedComponent1.getBitmap()
+                    val bitmap2 = item.addedComponent2.getBitmap()
 
                     if (bitmap1 == null || bitmap2 == null) {
+                        Log.d(LOG_TAG, "Skipping connection $item")
                         return@forEach
                     }
 
@@ -347,7 +349,7 @@ fun BoardScreen(
                     )
 
                 }
-                if (shouldAddRecenterButton && viewModel.currentBoardComponents.size > 0) {
+                if (shouldAddRecenterButton && viewModel.currentBoardComponents.isNotEmpty()) {
                     viewModel.isRecenterButtonShowing.value = true
                     Log.i("New Button", "Recenter needs to show up")
                 } else {
