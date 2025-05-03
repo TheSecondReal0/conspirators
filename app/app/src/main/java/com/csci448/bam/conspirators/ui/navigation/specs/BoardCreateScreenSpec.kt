@@ -48,8 +48,9 @@ object BoardCreateScreenSpec: IScreenSpec {
         CreateBoardScreen(
             modifier = modifier,
             viewModel = conspiratorsViewModel,
-            navigateToBoardCreation = {
-                navController.navigate(route = BoardScreenSpec.route)
+            navigateToBoardCreation = {it ->
+                conspiratorsViewModel.getBoardFromFBBoardListForEditing(it)
+                navController.navigate(BoardScreenSpec.buildRoute(it.id))
             }
         )
     }

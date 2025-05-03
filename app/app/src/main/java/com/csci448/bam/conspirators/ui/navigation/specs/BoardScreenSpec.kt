@@ -128,7 +128,10 @@ data object BoardScreenSpec : IScreenSpec {
             }
         }
         val idStr: String = navBackStackEntry.arguments?.getString(ARG_BOARD_ID_NAME) ?: ""
+        Log.d(LOG_TAG, "Retrieved id $idStr from navBackStackEntry")
         conspiratorsViewModel.loadBoard(idStr)
+        Log.d(LOG_TAG, "Retrieved id $idStr from navBackStackEntry")
+
         val viewOnly: Boolean
         if(conspiratorsViewModel.board?.userId != conspiratorsViewModel.thisUser?.uid){
             viewOnly = true
@@ -136,7 +139,7 @@ data object BoardScreenSpec : IScreenSpec {
             viewOnly = false
         }
         Log.d(LOG_TAG, "Retrieved viewOnly $viewOnly from navBackStackEntry")
-        Log.d(LOG_TAG, "Retrieved id $idStr from navBackStackEntry")
+
 
        BoardScreen(
            conspiratorsViewModel, modifier,

@@ -51,13 +51,14 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.rememberAsyncImagePainter
 import com.csci448.bam.conspirators.R
+import com.csci448.bam.conspirators.data.firestore.Board
 import com.csci448.bam.conspirators.viewmodel.ConspiratorsViewModel
 
 
 @Composable
 fun CreateBoardScreen(modifier: Modifier,
                       viewModel: ConspiratorsViewModel,
-                      navigateToBoardCreation: () -> Unit
+                      navigateToBoardCreation: (Board) -> Unit
 ) {
     val context = LocalContext.current
 
@@ -222,7 +223,7 @@ fun CreateBoardScreen(modifier: Modifier,
                 Button(
                     onClick = {
                         viewModel.createNewBoard()
-                        navigateToBoardCreation()
+                        navigateToBoardCreation(viewModel.board!!)
                               },
                     modifier = Modifier,
                     enabled = viewModel.currentBoardTitle.value.isNotEmpty(),

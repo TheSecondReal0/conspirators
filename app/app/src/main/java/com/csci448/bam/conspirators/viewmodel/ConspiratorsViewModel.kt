@@ -206,7 +206,7 @@ class ConspiratorsViewModel(val boards: List<OldBoard>, val users: List<User>): 
                         mBoard.value!!, onSuccess = { b ->
                             mBoard.value = b
                         },
-                        onError = {})
+                        onError = {Log.i(LOG_TAG, "FAIL1")})
                 },
                 onError = {
                     Log.i(LOG_TAG, "img thumbnail failed upload")
@@ -223,11 +223,12 @@ class ConspiratorsViewModel(val boards: List<OldBoard>, val users: List<User>): 
             )
             saveBoard(
                 mBoard.value!!, onSuccess = { b ->
-                mBoard.value = b
-
+                mBoard.value = b;
+                    Log.i(LOG_TAG, "${b.id} AAAAA")
             },
-                onError = {})
+                onError = {Log.i(LOG_TAG, "FAIL2")})
         }
+
 
     }
 
