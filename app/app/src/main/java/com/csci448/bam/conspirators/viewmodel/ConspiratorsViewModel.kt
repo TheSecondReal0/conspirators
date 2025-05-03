@@ -114,6 +114,8 @@ class ConspiratorsViewModel(val boards: List<OldBoard>, val users: List<User>): 
         )
     }
 
+
+
     fun saveBoard(board: Board, onSuccess: (Board) -> Unit, onError: (Throwable) -> Unit) {
         storageService.saveBoard(
             board = board,

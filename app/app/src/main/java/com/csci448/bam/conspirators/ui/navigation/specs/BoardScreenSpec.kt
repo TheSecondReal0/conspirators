@@ -34,6 +34,7 @@ import java.util.concurrent.ExecutorService
 data object BoardScreenSpec : IScreenSpec {
     private const val LOG_TAG = "448.BoardScreenSpec"
     private const val ARG_BOARD_ID_NAME: String = "id"
+    private const val ARG_VIEW: String = "view"
 
     override val title = R.string.app_name
 
@@ -127,13 +128,22 @@ data object BoardScreenSpec : IScreenSpec {
             }
         }
         val idStr: String = navBackStackEntry.arguments?.getString(ARG_BOARD_ID_NAME) ?: ""
-        Log.d(LOG_TAG, "Retrieved id $idStr from navBackStackEntry")
         conspiratorsViewModel.loadBoard(idStr)
+        val viewOnly: Boolean
+        if(conspiratorsViewModel.board?.userId != conspiratorsViewModel.thisUser?.uid){
+            viewOnly = true
+        } else {
+            viewOnly = false
+        }
+        Log.d(LOG_TAG, "Retrieved viewOnly $viewOnly from navBackStackEntry")
+        Log.d(LOG_TAG, "Retrieved id $idStr from navBackStackEntry")
+
        BoardScreen(
            conspiratorsViewModel, modifier,
            outputDirectory = outputDirectory,
            cameraExecutor = cameraExecutor,
-           handleImageCapture = handleImageCapture
+           handleImageCapture = handleImageCapture,
+           viewOnly = viewOnly
        )
     }
 

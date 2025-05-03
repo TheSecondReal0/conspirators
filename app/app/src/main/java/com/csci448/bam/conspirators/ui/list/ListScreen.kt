@@ -23,13 +23,17 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.csci448.bam.conspirators.R
+import com.csci448.bam.conspirators.data.firestore.Board
 import com.csci448.bam.conspirators.ui.sharedComponents.BoardCard
 import com.csci448.bam.conspirators.viewmodel.ConspiratorsViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ListScreen(modifier: Modifier, conspiratorsViewModel: ConspiratorsViewModel) {
+fun ListScreen(
+    modifier: Modifier,
+    conspiratorsViewModel: ConspiratorsViewModel,
+    onView: (Board) -> Unit
+) {
     Column(modifier = Modifier.fillMaxSize()) {
         var search by remember { mutableStateOf("") }
         SearchBar(
@@ -59,21 +63,15 @@ fun ListScreen(modifier: Modifier, conspiratorsViewModel: ConspiratorsViewModel)
         ) {
             Text(text = "YOU SEARCHED!!! YAYYYYY")
         }
-        LazyVerticalGrid (modifier = Modifier.fillMaxSize().padding(horizontal = 5.dp, vertical = 3.dp), columns = GridCells.Fixed(2))
+        LazyVerticalGrid (modifier = Modifier
+            .fillMaxSize()
+            .padding(horizontal = 5.dp, vertical = 3.dp), columns = GridCells.Fixed(2))
         {
            items(conspiratorsViewModel.allBoards.value, key = { it.id!! }) { item ->
                 BoardCard(
                     title = item.name,
                     imageUrl = item.thumbnailImageUrl,
-                    onClick = {
-//                        boardToView = item
-//                        if(!displayExpandedView) {
-//                            Log.i("home", "Image url is: ${boardToView?.thumbnailImageUrl}")
-//                            conspiratorsViewModel.currentThumbnailImage.value = null
-//                            conspiratorsViewModel.currentBoardTitle.value = boardToView!!.name
-//                            displayExpandedView = true
-//                        }
-                    },
+                    onClick = { onView(item) },
                     userName = item.userName
                 )
             }

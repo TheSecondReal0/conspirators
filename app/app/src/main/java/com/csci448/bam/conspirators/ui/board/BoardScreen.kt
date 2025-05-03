@@ -88,7 +88,8 @@ fun BoardScreen(
     modifier: Modifier,
     outputDirectory: File,
     cameraExecutor: ExecutorService,
-    handleImageCapture: (Uri) -> Unit
+    handleImageCapture: (Uri) -> Unit,
+    viewOnly: Boolean = false
 ) {
 
     Log.i(
@@ -428,123 +429,127 @@ fun BoardScreen(
                 }
             }
             // Column Carrying all editing tools
-
-            Column(
-                modifier = modifier
-                    .fillMaxWidth(.1F)
-                    .clip(shape = RoundedCornerShape(topEnd = 20.dp, bottomEnd = 20.dp))
-                    .background(colorResource(R.color.red_200))
-                    .align(Alignment.TopStart)
-            ) {
-                // Create Button to add an image
-                ToolButton(
-                    onClick = {
-                        if (selectedTool != SelectedTool.EDIT) {
-                            viewModel.currentBoardComponents.forEach { item ->
-                                item.currentlySelected.value = false
-                            }
-                        }
-                        selectedTool = SelectedTool.EDIT
-                        galleryLauncher.launch("image/*")
-                    },
-                    icon = ImageVector.vectorResource(R.drawable.baseline_image_24),
-                    iconDesc = "Click"
-                )
-                if (ContextCompat.checkSelfPermission(
-                        currentContext,
-                        Manifest.permission.CAMERA
-                    ) == PackageManager.PERMISSION_GRANTED
+            if(!viewOnly){
+                Column(
+                    modifier = modifier
+                        .fillMaxWidth(.1F)
+                        .clip(shape = RoundedCornerShape(topEnd = 20.dp, bottomEnd = 20.dp))
+                        .background(colorResource(R.color.red_200))
+                        .align(Alignment.TopStart)
                 ) {
+                    // Create Button to add an image
                     ToolButton(
                         onClick = {
-
                             if (selectedTool != SelectedTool.EDIT) {
                                 viewModel.currentBoardComponents.forEach { item ->
                                     item.currentlySelected.value = false
                                 }
                             }
                             selectedTool = SelectedTool.EDIT
-                            viewModel.showCameraView.value = true
-                            showCam = true
+                            galleryLauncher.launch("image/*")
                         },
-                        icon = ImageVector.vectorResource(R.drawable.baseline_camera_alt_24),
+                        icon = ImageVector.vectorResource(R.drawable.baseline_image_24),
                         iconDesc = "Click"
                     )
-                }
-                // Connect Line Button
-                ToolButton(
-                    onClick = {
-                        if (selectedTool != SelectedTool.CONNECT) {
-                            selectedTool = SelectedTool.CONNECT
-                            viewModel.currentBoardComponents.forEach { item ->
-                                item.currentlySelected.value = false
-                            }
-                        } else {
-                            selectedTool = SelectedTool.EDIT
-                        }
+                    if (ContextCompat.checkSelfPermission(
+                            currentContext,
+                            Manifest.permission.CAMERA
+                        ) == PackageManager.PERMISSION_GRANTED
+                    ) {
+                        ToolButton(
+                            onClick = {
 
-                    },
-                    icon = if (selectedTool == SelectedTool.CONNECT) ImageVector.vectorResource(R.drawable.baseline_draw_24) else Icons.Filled.BorderColor,
-                    iconDesc = "Click"
-                )
-                // view only mode button
-                ToolButton(
-                    onClick = {
-                        selectedTool = if (selectedTool != SelectedTool.VIEW) {
-                            SelectedTool.VIEW
-                        } else {
-                            SelectedTool.EDIT
-                        }
-                    },
-                    icon = if (selectedTool == SelectedTool.VIEW) Icons.Filled.Create else ImageVector.vectorResource(
-                        R.drawable.eye
-                    ),
-                    iconDesc = "Click"
-                )
-                // List View Button
-                /*
-                ToolButton(
-                    onClick = {
-                        Log.i("List", "clicked")
-                        viewModel.showListComponentTree.value =
-                            !viewModel.showListComponentTree.value
-                    },
-                    icon = Icons.AutoMirrored.Filled.List,
-                    iconDesc = "Click"
-                )
-                 */
-                // delete mode button
-                ToolButton(
-                    onClick = {
-                        Log.i("trash", "clicked")
-                        if (selectedTool != SelectedTool.TRASH) {
-                            Log.i("trash", "Now in trash mode")
-                            selectedTool = SelectedTool.TRASH
-                            viewModel.isEmptyTrashShowing.value = true
-                        } else {
-                            Log.i("trash", "Now in edit mode")
-                            selectedTool = SelectedTool.EDIT
-                            viewModel.isEmptyTrashShowing.value = false
-                            viewModel.currentBoardComponents.forEach { item ->
-                                item.currentlySelected.value = false
+                                if (selectedTool != SelectedTool.EDIT) {
+                                    viewModel.currentBoardComponents.forEach { item ->
+                                        item.currentlySelected.value = false
+                                    }
+                                }
+                                selectedTool = SelectedTool.EDIT
+                                viewModel.showCameraView.value = true
+                                showCam = true
+                            },
+                            icon = ImageVector.vectorResource(R.drawable.baseline_camera_alt_24),
+                            iconDesc = "Click"
+                        )
+                    }
+                    // Connect Line Button
+                    ToolButton(
+                        onClick = {
+                            if (selectedTool != SelectedTool.CONNECT) {
+                                selectedTool = SelectedTool.CONNECT
+                                viewModel.currentBoardComponents.forEach { item ->
+                                    item.currentlySelected.value = false
+                                }
+                            } else {
+                                selectedTool = SelectedTool.EDIT
                             }
-                        }
-                    },
-                    icon = if (selectedTool == SelectedTool.TRASH) Icons.Filled.Delete else Icons.Filled.DeleteForever,
-                    iconDesc = "Click"
-                )
-                // home button
-                ToolButton(
-                    onClick = {
-                        viewModel.saveCurrentBoardConfigAndUpload()
-                        viewModel.isSaveLoading.value = true
-                        Log.i("save", "clicked")
-                    },
-                    icon = Icons.Filled.Save,
-                    isLoading = viewModel.isSaveLoading.value,
-                    iconDesc = "Save"
-                )
+
+                        },
+                        icon = if (selectedTool == SelectedTool.CONNECT) ImageVector.vectorResource(R.drawable.baseline_draw_24) else Icons.Filled.BorderColor,
+                        iconDesc = "Click"
+                    )
+                    // view only mode button
+                    ToolButton(
+                        onClick = {
+                            selectedTool = if (selectedTool != SelectedTool.VIEW) {
+                                SelectedTool.VIEW
+                            } else {
+                                SelectedTool.EDIT
+                            }
+                        },
+                        icon = if (selectedTool == SelectedTool.VIEW) Icons.Filled.Create else ImageVector.vectorResource(
+                            R.drawable.eye
+                        ),
+                        iconDesc = "Click"
+                    )
+                    // List View Button
+                    /*
+                    ToolButton(
+                        onClick = {
+                            Log.i("List", "clicked")
+                            viewModel.showListComponentTree.value =
+                                !viewModel.showListComponentTree.value
+                        },
+                        icon = Icons.AutoMirrored.Filled.List,
+                        iconDesc = "Click"
+                    )
+                     */
+                    // delete mode button
+                    ToolButton(
+                        onClick = {
+                            Log.i("trash", "clicked")
+                            if (selectedTool != SelectedTool.TRASH) {
+                                Log.i("trash", "Now in trash mode")
+                                selectedTool = SelectedTool.TRASH
+                                viewModel.isEmptyTrashShowing.value = true
+                            } else {
+                                Log.i("trash", "Now in edit mode")
+                                selectedTool = SelectedTool.EDIT
+                                viewModel.isEmptyTrashShowing.value = false
+                                viewModel.currentBoardComponents.forEach { item ->
+                                    item.currentlySelected.value = false
+                                }
+                            }
+                        },
+                        icon = if (selectedTool == SelectedTool.TRASH) Icons.Filled.Delete else Icons.Filled.DeleteForever,
+                        iconDesc = "Click"
+                    )
+                    // home button
+                    ToolButton(
+                        onClick = {
+                            viewModel.saveCurrentBoardConfigAndUpload()
+                            viewModel.isSaveLoading.value = true
+                            Log.i("save", "clicked")
+                        },
+                        icon = Icons.Filled.Save,
+                        isLoading = viewModel.isSaveLoading.value,
+                        iconDesc = "Save"
+                    )
+                }
+            } else {
+                selectedTool = SelectedTool.VIEW
             }
+
             // Edit Component Card
             if (selectedTool == SelectedTool.EDIT_COMPONENT) {
                 viewModel.detailComponent.value?.let {
