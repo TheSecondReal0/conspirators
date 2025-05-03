@@ -70,6 +70,12 @@ class ConspiratorsViewModel(val boards: List<OldBoard>, val users: List<User>): 
         getUsersBoardsFromAllBoards()
     }
 
+    fun searchBoards(query: String): List<Board> {
+        return mAllBoards.value.filter {
+            board -> board.name.lowercase().contains(query.lowercase())
+                || board.userName.lowercase().contains(query.lowercase()) }
+    }
+
     fun refreshLocalScreenWithFirBaseData() {
         storageService.getAllBoards(
             onSuccess = { boards ->
