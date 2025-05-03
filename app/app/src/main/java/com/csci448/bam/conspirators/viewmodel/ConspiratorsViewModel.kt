@@ -1,6 +1,7 @@
 package com.csci448.bam.conspirators.viewmodel
 
 
+import android.content.Context
 import android.net.Uri
 import android.util.Log
 import androidx.compose.runtime.MutableState
@@ -13,6 +14,7 @@ import androidx.compose.ui.geometry.Offset
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.csci448.bam.conspirators.DrawingViewModel.SelectedTool
+import com.csci448.bam.conspirators.R
 import com.csci448.bam.conspirators.data.AddedComponent
 import com.csci448.bam.conspirators.data.OldBoard
 import com.csci448.bam.conspirators.data.converters.ConnectionFB
@@ -32,7 +34,10 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import java.io.File
 import java.util.UUID
+import java.util.concurrent.ExecutorService
+import java.util.concurrent.Executors
 
 data class DrawingState(
     val selectedTool: SelectedTool = SelectedTool.EDIT
@@ -491,4 +496,39 @@ class ConspiratorsViewModel(val boards: List<OldBoard>, val users: List<User>): 
     }
 
 
+
+//    private lateinit var outputDirectory: File
+    internal var cameraExecutor: ExecutorService = Executors.newSingleThreadExecutor()
+    internal var shouldShowCamera: MutableState<Boolean> = mutableStateOf(false)
+    private lateinit var photoUri: Uri
+    private var shouldShowPhoto: MutableState<Boolean> = mutableStateOf(false)
+
+    fun handleImageCapture(uri: Uri, currentContext: Context) {
+        Log.i("kilo", "Image captured: $uri")
+        shouldShowCamera.value = false
+        photoUri = uri
+        shouldShowPhoto.value = true
+        uploadImage(
+            imageUri = uri,
+            fileName = "photo",
+            onSuccess = {url ->
+                var component =
+                    AddedComponent(
+                        uri = photoUri,
+                        url = url,
+                        context = currentContext,
+                        offset = mutableStateOf(-offset.value + Offset(currentContext.resources.displayMetrics.widthPixels.toFloat()/2f,
+                            currentContext.resources.displayMetrics.heightPixels.toFloat()/2f)
+                        )
+                    )
+                currentBoardComponents.add(component)
+                viewModelScope.launch(Dispatchers.IO) {
+                    component.retrieveBitmap()
+                }
+            },
+            onError = {e ->
+                Log.d(LOG_TAG, "Failed to upload picture taken from camera")
+            }
+        )
+    }
 }
