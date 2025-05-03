@@ -382,6 +382,7 @@ class ConspiratorsViewModel(val boards: List<OldBoard>, val users: List<User>): 
     private fun mergeNewConnectionsIntoBoard() {
         val board = mBoard.value ?: return
         val currentConnectionsFB = mBoard.value!!.connections.toMutableList()
+        currentConnectionsFB.clear()
         for (component in currentBoardConnections) {
             val tryComp = component.toFirebaseConnection()
             if (tryComp !in currentConnectionsFB) {

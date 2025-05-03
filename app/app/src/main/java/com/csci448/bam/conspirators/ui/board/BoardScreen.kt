@@ -40,6 +40,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -70,6 +71,8 @@ import com.csci448.bam.conspirators.data.AddedComponent.Companion.scale
 import com.csci448.bam.conspirators.data.AddedComponent.Companion.screenSize
 import com.csci448.bam.conspirators.ui.createboard.customDetectTransformGestures2
 import com.csci448.bam.conspirators.viewmodel.ConspiratorsViewModel
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import java.io.File
 import java.net.URL
 import java.util.concurrent.ExecutorService
@@ -96,7 +99,7 @@ fun BoardScreen(
     screenSize =
         Pair(LocalConfiguration.current.screenWidthDp, LocalConfiguration.current.screenHeightDp)
     var selectedTool by remember { viewModel.selectedTool }
-    var imageUri by remember { mutableStateOf<Uri?>(null) }
+//    var imageUri by remember { mutableStateOf<Uri?>(null) }
     // global transforming values for the board components
     var scale by remember { mutableFloatStateOf(1f) }
     var pointerOffset by remember { mutableStateOf(Offset(0f, 0f)) }
@@ -107,27 +110,31 @@ fun BoardScreen(
         currentContext.resources.displayMetrics.heightPixels.toFloat()
     )
 
+    val coroutineScope = rememberCoroutineScope()
+
     // This allows us to pick an image off the gallery
     val galleryLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent(),
         onResult = { uri ->
-            uri?.let {
-                viewModel.uploadImage(it, it.toString(),
+            uri?.let { uri ->
+                viewModel.uploadImage(uri, uri.toString(),
                     onSuccess = { url: String ->
-                        imageUri = it
-                        viewModel.currentBoardComponents.add(
-                            AddedComponent(
-                                uri = imageUri!!,
-                                context = currentContext,
-                                offset = mutableStateOf(
-                                    -(viewModel.offset.value) + Offset(
-                                        currentContext.resources.displayMetrics.widthPixels.toFloat() / 2f,
-                                        currentContext.resources.displayMetrics.heightPixels.toFloat() / 2f
-                                    )
-                                ),
-                                url = url
-                            )
+//                        imageUri = uri
+                        val component = AddedComponent(
+                            uri = uri,
+                            context = currentContext,
+                            offset = mutableStateOf(
+                                -(viewModel.offset.value) + Offset(
+                                    currentContext.resources.displayMetrics.widthPixels.toFloat() / 2f,
+                                    currentContext.resources.displayMetrics.heightPixels.toFloat() / 2f
+                                )
+                            ),
+                            url = url
                         )
+                        viewModel.currentBoardComponents.add(component)
+                        coroutineScope.launch(Dispatchers.IO) {
+                            component.retrieveBitmap()
+                        }
                     },
                     onError = { e ->
                         Log.e(LOG_TAG, "Image uploading failed with error: $e")
@@ -274,6 +281,7 @@ fun BoardScreen(
                 var shouldAddRecenterButton = true
                 // DRAW IMAGES
                 viewModel.currentBoardComponents.forEach { item ->
+                    Log.d(LOG_TAG, "rendering board component: $item")
                     val calculatedOffset = Offset(
                         (item.offset.value.x + viewModel.offset.value.x) * scale,
                         (item.offset.value.y + viewModel.offset.value.y) * scale
@@ -671,11 +679,11 @@ fun Offset.rotateBy(angle: Float): Offset {
 
 private fun getComponentBounds(item: AddedComponent, canvasOffset: Offset, scale: Float): Rect {
     val topLeft = (item.offset.value + canvasOffset) * scale
-    var x: Float = 0.0f
+    var x: Float = 100.0f
     if (item.getBitmap() != null) {
         x = item.getBitmap()!!.width.toFloat()
     }
-    var y: Float = 0.0f
+    var y: Float = 100.0f
     if (item.getBitmap() != null) {
         y = item.getBitmap()!!.height.toFloat()
     }
