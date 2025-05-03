@@ -26,6 +26,8 @@ import com.csci448.bam.conspirators.data.firestore.StorageServiceImpl
 import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -229,32 +231,34 @@ class ConspiratorsViewModel(val boards: List<OldBoard>, val users: List<User>): 
 
     // update the current board that we're on, this should only be used with save function since it does not edit name or image
     fun saveCurrentBoardConfigAndUpload(){
+        Log.i(LOG_TAG, "saveCurrentBoardConfigAndUpload() called, board: ${mBoard.value}")
         mergeNewImagesIntoBoard()
         mergeNewConnectionsIntoBoard()
-        Log.i(LOG_TAG, "merges complete")
-        currentBoardComponents.forEach { compn ->
-            if(compn.uri != null) {//TODO this is a sloppy method of overwriting prevention
-                compn.id.let {
-                    storageService.uploadImage(
-                        compn.uri!!,
-                        fileName = it,
-                        onSuccess = {
-                            Log.i(LOG_TAG, "Img ${compn.id} successfully uploaded")
-                        },
-                        onError = {
-                            Log.d(LOG_TAG, "Img ${compn.id} failed to upload")
-                        }
-                    )
-                }
-            }
-        }
+        Log.i(LOG_TAG, "saveCurrentBoardConfigAndUpload() merges complete: ${mBoard.value}")
+//        currentBoardComponents.forEach { compn ->
+//            if(compn.uri != null) {//TODO this is a sloppy method of overwriting prevention
+//                compn.id.let {
+//                    storageService.uploadImage(
+//                        compn.uri!!,
+//                        fileName = it,
+//                        onSuccess = {
+//                            Log.i(LOG_TAG, "Img ${compn.id} successfully uploaded")
+//                        },
+//                        onError = {
+//                            Log.d(LOG_TAG, "Img ${compn.id} failed to upload")
+//                        }
+//                    )
+//                }
+//            }
+//        }
         val board = mBoard.value ?: return
 
-        val boardToSave = board.copy(
-            images = mBoard.value!!.images,
-            connections = mBoard.value!!.connections,
-        )
-        Log.i(LOG_TAG, "merged again")
+        val boardToSave = board
+//            .copy(
+//            images = mBoard.value!!.images,
+//            connections = mBoard.value!!.connections,
+//        )
+//        Log.i(LOG_TAG, "merged again")
         if (board.id == null) {
             storageService.saveBoard(boardToSave,
                 onSuccess = { savedBoard ->
@@ -281,10 +285,13 @@ class ConspiratorsViewModel(val boards: List<OldBoard>, val users: List<User>): 
     }
 
     private fun mergeNewImagesIntoBoard() {
+        Log.d(LOG_TAG, "mergeNewImagesIntoBoard() called, board: ${mBoard.value}")
         val board = mBoard.value ?: return
         val currentImagesMap = board.images.toMutableMap()
+        currentImagesMap.clear()
+        Log.d(LOG_TAG, "About to merge new images into board, currentImagesMap: $currentImagesMap")
         for (component in currentBoardComponents) {
-            if (component.id !in currentImagesMap) {
+            if (!currentImagesMap.containsKey(component.id)) {
                 Log.i(LOG_TAG, "adding component to firestore form")
                 val firebaseImage = component.toFirebaseImage()
                 if (firebaseImage != null && component.id != null) {
@@ -292,8 +299,10 @@ class ConspiratorsViewModel(val boards: List<OldBoard>, val users: List<User>): 
                 }
             }
         }
+        Log.d(LOG_TAG, "merging new images into board, currentImagesMap: $currentImagesMap")
         // board now updated with images
         mBoard.value = board.copy(images = currentImagesMap)
+        Log.d(LOG_TAG, "Merged new images into board, new board: ${mBoard.value}")
     }
 
 
@@ -318,16 +327,21 @@ class ConspiratorsViewModel(val boards: List<OldBoard>, val users: List<User>): 
         // pull in images and swap them to editable components if not already in editable connection list
         mBoard.value?.images?.forEach{ img ->
             val newComp = AddedComponent(
+                id =img.key,
                 uri = null,
                 context = null,
                 offset = mutableStateOf(Offset(x = img.value.x.toFloat(), y = img.value.y.toFloat())),
                 title = mutableStateOf(""),
                 url = img.value.imageUrl
             )
-            if (currentBoardComponents.find { return@find(it.id == newComp.id)} == null)
-            currentBoardComponents.add(
-                newComp
-            )
+            viewModelScope.launch(Dispatchers.IO) {
+                newComp.retrieveBitmap()
+            }
+            if (currentBoardComponents.find { return@find(it.id == newComp.id)} == null) {
+                currentBoardComponents.add(
+                    newComp
+                )
+            }
         }
         // pull in FB connections and swap them to editable connections
         mBoard.value?.connections?.forEach { conc ->
