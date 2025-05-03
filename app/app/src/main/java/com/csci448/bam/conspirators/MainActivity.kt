@@ -55,10 +55,10 @@ class MainActivity : ComponentActivity() {
         val providers = arrayListOf(
             AuthUI.IdpConfig.EmailBuilder().build()
         )
-
         // Create and launch sign-in intent
         val signInIntent = AuthUI.getInstance()
             .createSignInIntentBuilder()
+            .setTheme(com.csci448.bam.conspirators.R.style.Theme_Conspirators)
             .setAvailableProviders(providers)
             // disabling credential manager cause not working?
             // this makes it so you need to sign in every time you launch the app :(
@@ -77,7 +77,7 @@ class MainActivity : ComponentActivity() {
             conspiratorsViewModel.setUser(user)
             // ...
         } else {
-            
+
         }
     }
 
@@ -118,11 +118,17 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             ConspiratorsTheme{
-                Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    val navController = rememberNavController()
-                    val context = LocalContext.current
-                    createSignInIntent()
+                val navController = rememberNavController()
+                navController.enableOnBackPressed(false)
+                val context = LocalContext.current
+                createSignInIntent()
+                Scaffold(modifier = Modifier.fillMaxSize(),
+                    bottomBar = {
+                        ConspiratorsTopBar(navController, conspiratorsViewModel, context)
+                    }
+                ) { innerPadding ->
                     //conspiratorsViewModel.testDB()
+                    //navController.enableOnBackPressed(true)
                     Box(contentAlignment = Alignment.BottomCenter) {
                         ConspiratorsNavHost(
                             Modifier.padding(innerPadding),
@@ -138,7 +144,7 @@ class MainActivity : ComponentActivity() {
                             currentContext = context
                         )
                         }
-                        ConspiratorsTopBar(navController, conspiratorsViewModel, context)
+
                     }
                 }
             }

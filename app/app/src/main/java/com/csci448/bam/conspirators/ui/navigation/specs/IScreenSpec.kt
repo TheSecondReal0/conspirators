@@ -4,8 +4,10 @@ import android.content.Context
 import android.net.Uri
 import android.util.Log
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.PaddingValues
 
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -72,7 +74,7 @@ sealed interface IScreenSpec {
     @Composable
     fun TopAppBarContent(vm: ConspiratorsViewModel, navController: NavHostController,
                          navBackStackEntry: NavBackStackEntry?, context: Context) {
-        Row (Modifier.padding(5.dp).fillMaxHeight(0.1f).fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
+        Row (Modifier.consumeWindowInsets(PaddingValues(all = 5.dp)).fillMaxHeight(0.1f).fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
             TopAppBarActions(vm, navController, navBackStackEntry, context)
         }
     }
@@ -93,10 +95,6 @@ sealed interface IScreenSpec {
         IconButton(onClick = { navController.navigate(HomeScreenSpec.route)}) {
             vm.refreshLocalScreenWithFirBaseData()
             Icon(Icons.Filled.Home, contentDescription = "Home")
-        }
-        IconButton(onClick = {navController.navigate(ProfileScreenSpec.route)}) {
-            vm.refreshLocalScreenWithFirBaseData()
-            Icon(Icons.Filled.AccountCircle, contentDescription = "Account")
         }
         // TODO delete this
         IconButton(onClick = { navController.navigate(WeirdAsaTestScreenSpec.route) }) {

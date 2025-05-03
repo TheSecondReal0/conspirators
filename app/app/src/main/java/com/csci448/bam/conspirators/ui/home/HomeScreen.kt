@@ -41,16 +41,17 @@ fun HomeScreen(modifier: Modifier, conspiratorsViewModel: ConspiratorsViewModel,
         onDispose { conspiratorsViewModel.removeListenerForBoardsWithUserId() }
     }
 
-    Column(modifier = modifier.fillMaxSize()) {
-        Text(
-            text = "My Boards",
-            fontSize = 24.sp,
+    Column(modifier = Modifier.fillMaxSize()) {
+        conspiratorsViewModel.thisUser?.displayName?.let { Text(
+            text = "$it's Boards",
+            fontSize = 20.sp,
             fontWeight = FontWeight.Bold,
             modifier = Modifier
                 .align(Alignment.CenterHorizontally)
                 .padding(vertical = 16.dp),
             textAlign = TextAlign.Left
-        )
+        ) }
+
 
         LazyVerticalGrid(
             modifier = Modifier.weight(1f),

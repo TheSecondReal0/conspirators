@@ -426,6 +426,7 @@ fun BoardScreen(
                 }
             }
             // Column Carrying all editing tools
+
             Column(
                 modifier = modifier
                     .fillMaxWidth(.1F)
