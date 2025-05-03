@@ -25,67 +25,71 @@ data class AddedComponent(var uri: Uri? = null,
                           val title: MutableState<String> = mutableStateOf(""),
                           val id: String = UUID.randomUUID().toString(),
                           var url: String? = null) {
-    private lateinit var imageBitmap: ImageBitmap
+    private var imageBitmap: MutableState<ImageBitmap?> = mutableStateOf(null)
     val currentlySelected = mutableStateOf(false)
 
     companion object {
         var screenSize: Pair<Int, Int> = Pair(0,0)
         val scale: MutableFloatState = mutableFloatStateOf(1f)
     }
-    fun getBitmap(): ImageBitmap {
-        return imageBitmap
+    fun getBitmap(): ImageBitmap? {
+//        retrieveBitmap()
+//        return imageBitmap
+        return imageBitmap.value
     }
-    init {
-            try {
-                var bitmap: Bitmap? = null
 
-                if (uri != null && context !=null) {
-                    val inputStream = context.contentResolver.openInputStream(uri!!)
-                    bitmap = BitmapFactory.decodeStream(inputStream)
-                    inputStream?.close()
-                } else if (url != null) {
+    suspend fun retrieveBitmap() {
+        try {
+            var bitmap: Bitmap? = null
 
-                    val connection = URL(url).openConnection()
-                    connection.connect()
-                    val inputStream = connection.getInputStream()
-                    bitmap = BitmapFactory.decodeStream(inputStream)
-                    inputStream.close()
+            if (uri != null && context !=null) {
+                val inputStream = context.contentResolver.openInputStream(uri!!)
+                bitmap = BitmapFactory.decodeStream(inputStream)
+                inputStream?.close()
+            } else if (url != null) {
 
-                } else {
-                    bitmap = null
-                }
+                val connection = URL(url).openConnection()
+                connection.connect()
+                val inputStream = connection.getInputStream()
+                bitmap = BitmapFactory.decodeStream(inputStream)
+                inputStream.close()
 
-                if (bitmap != null) {
-                    var desiredHeight = bitmap.height.toFloat()
-                    var desiredWidth = bitmap.width.toFloat()
-
-                    if (desiredHeight > screenSize.second) {
-                        val scaler: Float = desiredHeight / (screenSize.second)
-                        desiredHeight /= scaler
-                        desiredWidth /= scaler
-                    }
-                    if (desiredWidth > screenSize.first) {
-                        val scaler = desiredWidth / (screenSize.first)
-                        desiredHeight /= scaler
-                        desiredWidth /= scaler
-                    }
-                    desiredWidth = desiredWidth * scale.floatValue
-                    desiredHeight = desiredHeight * scale.floatValue
-                    val bitmap2 = Bitmap.createScaledBitmap(
-                        bitmap,
-                        desiredWidth.toInt(),
-                        desiredHeight.toInt(),
-                        false
-                    )
-                    offset.value -= Offset(desiredWidth / 2, desiredHeight / 2)
-                    imageBitmap = bitmap2.asImageBitmap()
-                    Log.i("BoardComponent", "new Component created")
-                }
-
-            } catch (e: Exception) {
-                e.printStackTrace()
+            } else {
+                bitmap = null
             }
+
+            if (bitmap != null) {
+                var desiredHeight = bitmap.height.toFloat()
+                var desiredWidth = bitmap.width.toFloat()
+
+                if (desiredHeight > screenSize.second) {
+                    val scaler: Float = desiredHeight / (screenSize.second)
+                    desiredHeight /= scaler
+                    desiredWidth /= scaler
+                }
+                if (desiredWidth > screenSize.first) {
+                    val scaler = desiredWidth / (screenSize.first)
+                    desiredHeight /= scaler
+                    desiredWidth /= scaler
+                }
+                desiredWidth = desiredWidth * scale.floatValue
+                desiredHeight = desiredHeight * scale.floatValue
+                val bitmap2 = Bitmap.createScaledBitmap(
+                    bitmap,
+                    desiredWidth.toInt(),
+                    desiredHeight.toInt(),
+                    false
+                )
+                offset.value -= Offset(desiredWidth / 2, desiredHeight / 2)
+                imageBitmap.value = bitmap2.asImageBitmap()
+                Log.i("BoardComponent", "new Component created")
+            }
+
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
     }
+
     fun rescale() {
         try {
             var bitmap: Bitmap? = null
@@ -126,7 +130,7 @@ data class AddedComponent(var uri: Uri? = null,
                     desiredHeight.toInt(),
                     false
                 )
-                imageBitmap = bitmap2.asImageBitmap()
+                imageBitmap.value = bitmap2.asImageBitmap()
             }
         } catch (e: Exception) {
             e.printStackTrace()

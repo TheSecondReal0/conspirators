@@ -40,6 +40,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -51,6 +52,7 @@ import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.graphics.asAndroidBitmap
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.graphicsLayer
@@ -69,6 +71,8 @@ import com.csci448.bam.conspirators.data.AddedComponent.Companion.scale
 import com.csci448.bam.conspirators.data.AddedComponent.Companion.screenSize
 import com.csci448.bam.conspirators.ui.createboard.customDetectTransformGestures2
 import com.csci448.bam.conspirators.viewmodel.ConspiratorsViewModel
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import java.io.File
 import java.net.URL
 import java.util.concurrent.ExecutorService
@@ -95,7 +99,7 @@ fun BoardScreen(
     screenSize =
         Pair(LocalConfiguration.current.screenWidthDp, LocalConfiguration.current.screenHeightDp)
     var selectedTool by remember { viewModel.selectedTool }
-    var imageUri by remember { mutableStateOf<Uri?>(null) }
+//    var imageUri by remember { mutableStateOf<Uri?>(null) }
     // global transforming values for the board components
     var scale by remember { mutableFloatStateOf(1f) }
     var pointerOffset by remember { mutableStateOf(Offset(0f, 0f)) }
@@ -106,24 +110,35 @@ fun BoardScreen(
         currentContext.resources.displayMetrics.heightPixels.toFloat()
     )
 
+    val coroutineScope = rememberCoroutineScope()
+
     // This allows us to pick an image off the gallery
     val galleryLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent(),
         onResult = { uri ->
-            uri?.let {
-                imageUri = it
-                viewModel.currentBoardComponents.add(
-                    AddedComponent(
-                        uri = imageUri!!,
-                        context = currentContext,
-                        offset = mutableStateOf(
-                            -(viewModel.offset.value) + Offset(
-                                currentContext.resources.displayMetrics.widthPixels.toFloat() / 2f,
-                                currentContext.resources.displayMetrics.heightPixels.toFloat() / 2f
-                            )
+            uri?.let { uri ->
+                viewModel.uploadImage(uri, uri.toString(),
+                    onSuccess = { url: String ->
+//                        imageUri = uri
+                        val component = AddedComponent(
+                            uri = uri,
+                            context = currentContext,
+                            offset = mutableStateOf(
+                                -(viewModel.offset.value) + Offset(
+                                    currentContext.resources.displayMetrics.widthPixels.toFloat() / 2f,
+                                    currentContext.resources.displayMetrics.heightPixels.toFloat() / 2f
+                                )
+                            ),
+                            url = url
                         )
-                    )
-                )
+                        viewModel.currentBoardComponents.add(component)
+                        coroutineScope.launch(Dispatchers.IO) {
+                            component.retrieveBitmap()
+                        }
+                    },
+                    onError = { e ->
+                        Log.e(LOG_TAG, "Image uploading failed with error: $e")
+                    })
             }
         }
     )
@@ -266,12 +281,16 @@ fun BoardScreen(
                 var shouldAddRecenterButton = true
                 // DRAW IMAGES
                 viewModel.currentBoardComponents.forEach { item ->
+                    Log.d(LOG_TAG, "rendering board component: $item")
                     val calculatedOffset = Offset(
                         (item.offset.value.x + viewModel.offset.value.x) * scale,
                         (item.offset.value.y + viewModel.offset.value.y) * scale
                     )
                     // check if the item is going to actually be on the screen so we dont waste resources trying to draw it
-                    val bitmap = item.getBitmap()
+                    val bitmap: ImageBitmap? = item.getBitmap()
+                    if (bitmap == null) {
+                        return@forEach
+                    }
                     if (calculatedOffset.x < screenSize.x && calculatedOffset.y < screenSize.y &&
                         calculatedOffset.x + bitmap.width > 0 &&
                         calculatedOffset.y + bitmap.height > 0
@@ -305,6 +324,11 @@ fun BoardScreen(
                 viewModel.currentBoardConnections.forEach { item ->
                     val bitmap1 = item.addedComponent1.getBitmap()
                     val bitmap2 = item.addedComponent1.getBitmap()
+
+                    if (bitmap1 == null || bitmap2 == null) {
+                        return@forEach
+                    }
+
                     val calculatedOffsetStart = Offset(
                         (item.addedComponent1.offset.value.x + viewModel.offset.value.x) * scale + bitmap1.width / 2,
                         (item.addedComponent1.offset.value.y + viewModel.offset.value.y) * scale + bitmap1.height / 20
@@ -584,23 +608,23 @@ fun ComponentEditCard(
         contentAlignment = Alignment.Center
     ) {
         var bitmap: Bitmap? = null
-        var imageBitmap: ImageBitmap? = null
-        if (component.uri != null) {
-            val inputStream = context.contentResolver.openInputStream(component.uri!!)
-            bitmap = BitmapFactory.decodeStream(inputStream)
-            inputStream?.close()
-        } else if (component.url != null) {
-            val connection = URL(component.url).openConnection()
-            connection.connect()
-            val inputStream = connection.getInputStream()
-            bitmap = BitmapFactory.decodeStream(inputStream)
-            inputStream.close()
-        } else {
-            bitmap = null
-        }
-        if (bitmap != null) {
-            var desiredHeight = bitmap.height.toFloat()
-            var desiredWidth = bitmap.width.toFloat()
+        var imageBitmap: ImageBitmap? = component.getBitmap()
+//        if (component.uri != null) {
+//            val inputStream = context.contentResolver.openInputStream(component.uri!!)
+//            bitmap = BitmapFactory.decodeStream(inputStream)
+//            inputStream?.close()
+//        } else if (component.url != null) {
+//            val connection = URL(component.url).openConnection()
+//            connection.connect()
+//            val inputStream = connection.getInputStream()
+//            bitmap = BitmapFactory.decodeStream(inputStream)
+//            inputStream.close()
+//        } else {
+//            bitmap = null
+//        }
+        if (imageBitmap != null) {
+            var desiredHeight = imageBitmap.height.toFloat()
+            var desiredWidth = imageBitmap.width.toFloat()
             val shave1: Float = if(screenSize.second*.8 > desiredWidth)
                 ((screenSize.second*.8).toFloat()-desiredHeight) else 0f
             val shave2: Float = if(screenSize.first*.8 > desiredHeight)
@@ -610,7 +634,7 @@ fun ComponentEditCard(
             desiredWidth = desiredWidth-shave1-shave2
 
             val bitmap2 = Bitmap.createScaledBitmap(
-                bitmap,
+                imageBitmap.asAndroidBitmap(),
                 desiredWidth.toInt(),
                 desiredHeight.toInt(),
                 false
@@ -656,9 +680,14 @@ fun Offset.rotateBy(angle: Float): Offset {
 
 private fun getComponentBounds(item: AddedComponent, canvasOffset: Offset, scale: Float): Rect {
     val topLeft = (item.offset.value + canvasOffset) * scale
-    val size = Size(
-        item.getBitmap().width.toFloat(),
-        item.getBitmap().height.toFloat()
-    )
+    var x: Float = 100.0f
+    if (item.getBitmap() != null) {
+        x = item.getBitmap()!!.width.toFloat()
+    }
+    var y: Float = 100.0f
+    if (item.getBitmap() != null) {
+        y = item.getBitmap()!!.height.toFloat()
+    }
+    val size = Size(x, y)
     return Rect(topLeft, size)
 }
