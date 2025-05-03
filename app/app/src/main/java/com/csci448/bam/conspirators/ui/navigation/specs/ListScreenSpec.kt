@@ -2,6 +2,7 @@ package com.csci448.bam.conspirators.ui.navigation.specs
 
 import android.content.Context
 import android.net.Uri
+import android.util.Log
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
 import androidx.compose.ui.Modifier
@@ -35,7 +36,10 @@ data object ListScreenSpec : IScreenSpec{
         cameraExecutor: ExecutorService,
         handleImageCapture: (Uri) -> Unit
     ) {
-        ListScreen(modifier, conspiratorsViewModel)
+        ListScreen(modifier, conspiratorsViewModel, onView = { it ->
+            conspiratorsViewModel.getBoardFromFBBoardListForEditing(it)
+            navController.navigate(BoardScreenSpec.buildRoute(it.id))
+        })
     }
 
 //    @Composable

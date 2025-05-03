@@ -65,6 +65,7 @@ class MainActivity : ComponentActivity() {
             .setCredentialManagerEnabled(false)
             .build()
         signInLauncher.launch(signInIntent)
+        //finish()
         // [END auth_fui_create_intent]
     }
 
@@ -77,7 +78,7 @@ class MainActivity : ComponentActivity() {
             conspiratorsViewModel.setUser(user)
             // ...
         } else {
-
+            createSignInIntent()
         }
     }
 
@@ -119,7 +120,7 @@ class MainActivity : ComponentActivity() {
         setContent {
             ConspiratorsTheme{
                 val navController = rememberNavController()
-                navController.enableOnBackPressed(false)
+                navController.enableOnBackPressed(enabled = false)
                 val context = LocalContext.current
                 createSignInIntent()
                 Scaffold(modifier = Modifier.fillMaxSize(),

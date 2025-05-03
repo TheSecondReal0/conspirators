@@ -31,6 +31,7 @@ import com.csci448.bam.conspirators.data.firestore.Board
 import com.csci448.bam.conspirators.ui.sharedComponents.BoardCard
 import com.csci448.bam.conspirators.ui.sharedComponents.BoardCardExpanded
 import com.csci448.bam.conspirators.viewmodel.ConspiratorsViewModel
+import java.util.UUID
 
 @Composable
 fun HomeScreen(modifier: Modifier, conspiratorsViewModel: ConspiratorsViewModel, editClicked: (Board) -> Unit) {
@@ -58,7 +59,8 @@ fun HomeScreen(modifier: Modifier, conspiratorsViewModel: ConspiratorsViewModel,
             columns = GridCells.Fixed(2),
             userScrollEnabled = !displayExpandedView
         ) {
-            items(conspiratorsViewModel.allBoards.value, key = { it.id!! }) { item ->
+            conspiratorsViewModel.getUsersBoardsFromAllBoards()
+            items(conspiratorsViewModel.myBoards) { item ->
                 BoardCard(
                     title = item.name,
                     imageUrl = item.thumbnailImageUrl,
