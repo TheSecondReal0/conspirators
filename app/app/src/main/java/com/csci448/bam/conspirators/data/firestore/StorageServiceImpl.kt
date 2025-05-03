@@ -170,9 +170,11 @@ class StorageServiceImpl : StorageService {
             else -> emptyList()
         }
         val thumbnailImageUrl = doc.getString("thumbnailImageUrl") ?: ""
+        val userName = doc.getString("userName") ?: ""
         return Board(
             id = id,
             userId = userId,
+            userName = userName,
             name = name,
             images = images,
             connections = connections,

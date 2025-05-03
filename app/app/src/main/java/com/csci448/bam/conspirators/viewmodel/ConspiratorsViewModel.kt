@@ -456,6 +456,7 @@ class ConspiratorsViewModel(val boards: List<OldBoard>, val users: List<User>): 
                     Log.i(LOG_TAG, "img thumbnail ${it.toString()} uploaded")
                     mBoard.value = boardToView.copy(
                         name = currentBoardTitle.value,
+                        userName = thisUser?.displayName ?: "User",
                         thumbnailImageUrl = it
                     )
                     updateBoard(
@@ -474,6 +475,7 @@ class ConspiratorsViewModel(val boards: List<OldBoard>, val users: List<User>): 
             Log.i(LOG_TAG, "no thumbnail but new update")
             mBoard.value = boardToView.copy(
                 name = currentBoardTitle.value,
+                userName = thisUser?.displayName ?: "User",
                 thumbnailImageUrl = null
             )
             updateBoard(
