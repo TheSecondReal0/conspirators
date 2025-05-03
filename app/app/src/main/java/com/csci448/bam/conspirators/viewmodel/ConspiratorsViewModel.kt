@@ -253,7 +253,8 @@ class ConspiratorsViewModel(val boards: List<OldBoard>, val users: List<User>): 
 //                }
 //            }
 //        }
-        val board = mBoard.value ?: return
+        var board = mBoard.value ?: return
+        board = board.copy(userName = thisUser?.displayName ?: "Guest")
 
         val boardToSave = board
 //            .copy(
@@ -347,10 +348,11 @@ class ConspiratorsViewModel(val boards: List<OldBoard>, val users: List<User>): 
         }
         // pull in FB connections and swap them to editable connections
         mBoard.value?.connections?.forEach { conc ->
-            val newConc = conc?.toAddedConnection()
+            val newConc = conc.toAddedConnection()
             // make sure newConc isnt null and that it does not already exist in the list
-            if (newConc != null && currentBoardConnections.find { return@find (it.addedComponent2.id == newConc.addedComponent1.id) } == null
-                && currentBoardConnections.find { return@find (it.addedComponent2.id == newConc.addedComponent1.id) } == null) {
+//            if (newConc != null && currentBoardConnections.find { return@find (it.addedComponent1.id == newConc.addedComponent1.id) } == null
+//                && currentBoardConnections.find { return@find (it.addedComponent2.id == newConc.addedComponent2.id) } == null) {
+            if (newConc != null) {
                 currentBoardConnections.add(newConc)
             }
         }
@@ -386,7 +388,7 @@ class ConspiratorsViewModel(val boards: List<OldBoard>, val users: List<User>): 
         val currentConnectionsFB = mBoard.value!!.connections.toMutableList()
         currentConnectionsFB.clear()
         for (component in currentBoardConnections) {
-            val tryComp = component.toFirebaseConnection()
+            val tryComp = component.toFirebaseConnection()!!
             if (tryComp !in currentConnectionsFB) {
                 if (tryComp != null) {
                     currentConnectionsFB.add(tryComp)
@@ -458,6 +460,7 @@ class ConspiratorsViewModel(val boards: List<OldBoard>, val users: List<User>): 
                     Log.i(LOG_TAG, "img thumbnail ${it.toString()} uploaded")
                     mBoard.value = boardToView.copy(
                         name = currentBoardTitle.value,
+                        userName = thisUser?.displayName ?: "User",
                         thumbnailImageUrl = it
                     )
                     updateBoard(
@@ -476,6 +479,7 @@ class ConspiratorsViewModel(val boards: List<OldBoard>, val users: List<User>): 
             Log.i(LOG_TAG, "no thumbnail but new update")
             mBoard.value = boardToView.copy(
                 name = currentBoardTitle.value,
+                userName = thisUser?.displayName ?: "User",
                 thumbnailImageUrl = null
             )
             updateBoard(

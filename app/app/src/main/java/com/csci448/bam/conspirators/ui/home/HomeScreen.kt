@@ -73,7 +73,7 @@ fun HomeScreen(modifier: Modifier, conspiratorsViewModel: ConspiratorsViewModel,
                             displayExpandedView = true
                         }
                     },
-                    userName = item.userId
+                    userName = item.userName
                 )
             }
         }

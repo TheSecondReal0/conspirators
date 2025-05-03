@@ -8,9 +8,10 @@ private val nothing = null
 data class Board(
     val id: String? = null,
     val userId: String = "",
+    val userName: String = "",
     val name: String = "",
     // keys and values here are IDs used in images map
-    val connections: List<ConnectionFB?> = listOf(null),
+    val connections: List<ConnectionFB> = listOf(),
     val images: Map<String, Image> = mapOf(),
     val thumbnailImageUrl: String? = null
     )

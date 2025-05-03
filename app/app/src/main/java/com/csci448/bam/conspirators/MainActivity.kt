@@ -33,10 +33,15 @@ import android.net.Uri
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.geometry.Offset
+import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.viewModelScope
 import com.csci448.bam.conspirators.data.AddedComponent
 import com.firebase.ui.auth.AuthUI
 import com.firebase.ui.auth.FirebaseAuthUIActivityResultContract
 import com.firebase.ui.auth.data.model.FirebaseAuthUIAuthenticationResult
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.launch
 import java.io.File
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
@@ -213,14 +218,27 @@ class MainActivity : ComponentActivity() {
         shouldShowCamera.value = false
         photoUri = uri
         shouldShowPhoto.value = true
-        conspiratorsViewModel.currentBoardComponents.add(
-            AddedComponent(
-            uri = photoUri,
-            context = currentContext,
-            offset = mutableStateOf(-conspiratorsViewModel.offset.value + Offset(currentContext.resources.displayMetrics.widthPixels.toFloat()/2f,
-                currentContext.resources.displayMetrics.heightPixels.toFloat()/2f)
-            )
-        )
+        conspiratorsViewModel.uploadImage(
+            imageUri = uri,
+            fileName = "photo",
+            onSuccess = {url ->
+                var component =
+                    AddedComponent(
+                        uri = photoUri,
+                        url = url,
+                        context = currentContext,
+                        offset = mutableStateOf(-conspiratorsViewModel.offset.value + Offset(currentContext.resources.displayMetrics.widthPixels.toFloat()/2f,
+                            currentContext.resources.displayMetrics.heightPixels.toFloat()/2f)
+                        )
+                    )
+                conspiratorsViewModel.currentBoardComponents.add(component)
+                conspiratorsViewModel.viewModelScope.launch(Dispatchers.IO) {
+                    component.retrieveBitmap()
+                }
+            },
+            onError = {e ->
+                Log.d(LOG_TAG, "Failed to upload picture taken from camera")
+            }
         )
     }
 

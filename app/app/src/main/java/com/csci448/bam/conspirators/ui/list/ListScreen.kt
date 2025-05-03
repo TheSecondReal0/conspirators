@@ -72,7 +72,7 @@ fun ListScreen(
                     title = item.name,
                     imageUrl = item.thumbnailImageUrl,
                     onClick = { onView(item) },
-                    userName = item.userId
+                    userName = item.userName
                 )
             }
         }
