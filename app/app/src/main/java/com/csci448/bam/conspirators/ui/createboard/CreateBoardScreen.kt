@@ -143,7 +143,7 @@ fun CreateBoardScreen(modifier: Modifier,
         label = "border"
     )
 
-    Box(modifier = modifier
+    Box(modifier = Modifier
         .fillMaxSize()
         .background(color),
         contentAlignment = Alignment.Center) {

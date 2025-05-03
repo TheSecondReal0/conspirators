@@ -30,7 +30,7 @@ import com.csci448.bam.conspirators.viewmodel.ConspiratorsViewModel
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ListScreen(modifier: Modifier, conspiratorsViewModel: ConspiratorsViewModel) {
-    Column(modifier = modifier) {
+    Column(modifier = Modifier.fillMaxSize()) {
         var search by remember { mutableStateOf("") }
         SearchBar(
             modifier = Modifier.align(Alignment.CenterHorizontally),

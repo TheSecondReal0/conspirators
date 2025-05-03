@@ -41,7 +41,7 @@ fun HomeScreen(modifier: Modifier, conspiratorsViewModel: ConspiratorsViewModel,
         onDispose { conspiratorsViewModel.removeListenerForBoardsWithUserId() }
     }
 
-    Column(modifier = modifier.fillMaxSize()) {
+    Column(modifier = Modifier.fillMaxSize()) {
         Text(
             text = "My Boards",
             fontSize = 24.sp,

@@ -118,10 +118,14 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             ConspiratorsTheme{
-                Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    val navController = rememberNavController()
-                    val context = LocalContext.current
-                    createSignInIntent()
+                val navController = rememberNavController()
+                val context = LocalContext.current
+                createSignInIntent()
+                Scaffold(modifier = Modifier.fillMaxSize(),
+                    bottomBar = {
+                        ConspiratorsTopBar(navController, conspiratorsViewModel, context)
+                    }
+                ) { innerPadding ->
                     //conspiratorsViewModel.testDB()
                     Box(contentAlignment = Alignment.BottomCenter) {
                         ConspiratorsNavHost(
@@ -138,7 +142,7 @@ class MainActivity : ComponentActivity() {
                             currentContext = context
                         )
                         }
-                        ConspiratorsTopBar(navController, conspiratorsViewModel, context)
+
                     }
                 }
             }
